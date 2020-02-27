@@ -10,6 +10,8 @@ data Learn p a b = Learn
     , req  :: (p, a, b) -> a
     }
 
+forwards :: Learn p a b -> p -> a -> b
+forwards = curry . impl
 
 instance C.Category (Learn p) where
   id = Learn
@@ -46,13 +48,21 @@ adjunct lear = Learn
         in const zapped <$> la
     }
 
-cataLearn :: (Recursive t) => Learn p (Base t a) a -> Learn p t a
-cataLearn = _
+
+cataL :: (Recursive t) => Learn p (Base t a) a -> Learn p t a
+cataL l = Learn
+  { impl = i
+  , upd = \(p,t,a) -> zygo (curry (impl l) p) (\b -> upd l (p,fst <$> b, a)) t
+  , req = error "not impl"
+  }
+  where
+    i (p,t) = cata (curry (impl l) p) t
+
+{-
 
 anaLearn :: (Corecursive t) => Learn p a (Base t a) -> Learn p a t
 anaLearn = _
 
-{-
 liftLens :: Lens a b -> Learn p a b
 liftLens = _
 -}
