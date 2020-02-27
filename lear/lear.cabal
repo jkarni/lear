@@ -1,0 +1,55 @@
+cabal-version: 1.12
+
+-- This file has been generated from package.yaml by hpack version 0.32.0.
+--
+-- see: https://github.com/sol/hpack
+--
+-- hash: c287cd4854d507f83477c8f718692a81d4c562b2234b0a5d9223a17e3a3c322e
+
+name:           lear
+version:        0.1.0.0
+description:    Please see the README on GitHub at <https://github.com/githubuser/lear#readme>
+homepage:       https://github.com/jkarni/lear#readme
+bug-reports:    https://github.com/jkarni/lear/issues
+author:         Julian K. Arni
+maintainer:     jkarni@riseup.net
+copyright:      2020 Julian K. Arni
+license:        BSD3
+license-file:   LICENSE
+build-type:     Simple
+extra-source-files:
+    README.md
+    ChangeLog.md
+
+source-repository head
+  type: git
+  location: https://github.com/jkarni/lear
+
+library
+  exposed-modules:
+      Lear
+  other-modules:
+      Paths_lear
+  hs-source-dirs:
+      src
+  build-depends:
+      adjunctions
+    , base >=4.7 && <5
+    , recursion-schemes
+  default-language: Haskell2010
+
+test-suite lear-test
+  type: exitcode-stdio-1.0
+  main-is: Spec.hs
+  other-modules:
+      Paths_lear
+  hs-source-dirs:
+      test
+  ghc-options: -threaded -rtsopts -with-rtsopts=-N
+  build-depends:
+      adjunctions
+    , base >=4.7 && <5
+    , hspec
+    , lear
+    , recursion-schemes
+  default-language: Haskell2010
