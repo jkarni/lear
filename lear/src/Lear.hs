@@ -1,40 +1,17 @@
 module Lear where
 
 import qualified Control.Category        as C
+import           Data.AdditiveGroup
 import           Data.Functor.Adjunction
 import           Data.Functor.Foldable
+import           Data.VectorSpace
+import           GHC.Generics            (Generic)
 
 data Learn p a b = Learn
     { impl :: (p,a) -> b
     , upd  :: (p, a, b) -> p
     , req  :: (p, a, b) -> a
-    }
-
-forwards :: Learn p a b -> p -> a -> b
-forwards = curry . impl
-
--- TODO:
---
--- A nicer way to do this is to make `Learn p a b` a vector space over F.
--- Then we define either:
---   dumb :: (p -> a -> b) -> Learn p a b
--- or
---   stultify :: Learn p a b -> Learn p a b
---
--- Which for upd and req just return the original version. Then we can say
--- something like:
---
--- rate :: r -> Learn p a b -> Learn p a b
--- rate r l = (r .* stultify l) - ((1 - r) .* l)
---
-addRate
-  :: (Fractional p, Fractional a)
-  => Double -> Learn p a b -> Learn p a b
-addRate r l = l
-  { upd = \(p,a,b) -> p - (fromRational (toRational r) * upd l (p,a,b))
-  , req = \(p,a,b) -> a - (fromRational (toRational r) * req l (p,a,b))
-  }
-
+    } deriving (Generic)
 
 instance C.Category (Learn p) where
   id = Learn
@@ -57,8 +34,35 @@ instance C.Category (Learn p) where
         let b = impl g (p,a)
         in upd g (upd f (p,b,c), a, req f (p,b,c))
 
-adjunct :: (Eq (l ()), Adjunction l r)
-    => Learn p a b -> Learn (r p) (l a) b
+instance (AdditiveGroup p, AdditiveGroup a, AdditiveGroup b)
+  => AdditiveGroup (Learn p a b)
+
+instance (VectorSpace p, VectorSpace a, VectorSpace b
+  , Scalar b ~ Scalar p, Scalar a ~ Scalar b)
+  => VectorSpace (Learn p a b) where
+  type Scalar (Learn p a b) = Scalar p
+  s *^ l = Learn
+    { impl = \(p,a) -> s *^ impl l (p,a)
+    , upd = \(p,a,b) -> s *^ upd l (p,a,b)
+    , req = \(p,a,b) -> s *^ req l (p,a,b)
+    }
+
+-- | Make a learner never learn.
+--
+-- Instead, it always sends as update whatever it received, and always asks for
+-- input whatever it received.
+stultify :: Learn p a b -> Learn p a b
+stultify l = l { upd = \(p,a,b) -> p, req = \(p,a,b) -> a }
+
+forwards :: Learn p a b -> p -> a -> b
+forwards = curry . impl
+
+-- | Multiply learning rate by a scalar.
+atRate :: VectorSpace (Learn p a b) => Learn p a b -> Scalar p -> Learn p a b
+atRate l r = lerp l (stultify l) r
+
+-- | Lift a learner via adjunctions.
+adjunct :: (Eq (l ()), Adjunction l r) => Learn p a b -> Learn (r p) (l a) b
 adjunct lear = Learn
     { impl = uncurry $ zapWithAdjunction (curry $ impl lear)
     , upd = \(rp,la,b) ->

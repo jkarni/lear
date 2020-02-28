@@ -16,6 +16,7 @@ dependencies:
 - base >= 4.7 && < 5
 - adjunctions
 - recursion-schemes
+- vector-space
 
 library:
   source-dirs: src
@@ -31,3 +32,8 @@ tests:
     dependencies:
     - lear
     - hspec
+
+default-extensions:
+- DeriveGeneric
+- TypeFamilies
+- FlexibleContexts
