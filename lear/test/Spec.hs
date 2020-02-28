@@ -8,6 +8,11 @@ main :: IO ()
 main = hspec $ do
   cataLSpec
 
+{-
+adjunctSpec :: Spec
+adjunctSpec = describe "adjunct" $ do
+-}
+
 cataLSpec :: Spec
 cataLSpec = describe "cataL" $ do
 

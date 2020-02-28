@@ -13,6 +13,29 @@ data Learn p a b = Learn
 forwards :: Learn p a b -> p -> a -> b
 forwards = curry . impl
 
+-- TODO:
+--
+-- A nicer way to do this is to make `Learn p a b` a vector space over F.
+-- Then we define either:
+--   dumb :: (p -> a -> b) -> Learn p a b
+-- or
+--   stultify :: Learn p a b -> Learn p a b
+--
+-- Which for upd and req just return the original version. Then we can say
+-- something like:
+--
+-- rate :: r -> Learn p a b -> Learn p a b
+-- rate r l = (r .* stultify l) - ((1 - r) .* l)
+--
+addRate
+  :: (Fractional p, Fractional a)
+  => Double -> Learn p a b -> Learn p a b
+addRate r l = l
+  { upd = \(p,a,b) -> p - (fromRational (toRational r) * upd l (p,a,b))
+  , req = \(p,a,b) -> a - (fromRational (toRational r) * req l (p,a,b))
+  }
+
+
 instance C.Category (Learn p) where
   id = Learn
     { impl = (\(_,x) -> x)
