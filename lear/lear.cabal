@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 3e360d25547013570ac38057eeaf68c5d42219921c411320205abbd4be7b1fe8
+-- hash: 9b05f7be6c29e5fefb85ac929381c33fd340ca0c192dc982779e77f5375578bc
 
 name:           lear
 version:        0.1.0.0
@@ -28,14 +28,17 @@ source-repository head
 library
   exposed-modules:
       Lear
+      Lear.AsVector
+      Lear.SimpleDeriv
   other-modules:
       Paths_lear
   hs-source-dirs:
       src
-  default-extensions: DeriveGeneric TypeFamilies FlexibleContexts
+  default-extensions: DataKinds DeriveFunctor DeriveGeneric DeriveTraversable ExistentialQuantification FlexibleContexts FunctionalDependencies GADTs MultiParamTypeClasses RankNTypes ScopedTypeVariables TupleSections TypeFamilies TypeOperators
   build-depends:
       adjunctions
     , base >=4.7 && <5
+    , lens
     , recursion-schemes
     , vector-space
   default-language: Haskell2010
@@ -47,13 +50,14 @@ test-suite lear-test
       Paths_lear
   hs-source-dirs:
       test
-  default-extensions: DeriveGeneric TypeFamilies FlexibleContexts
+  default-extensions: DataKinds DeriveFunctor DeriveGeneric DeriveTraversable ExistentialQuantification FlexibleContexts FunctionalDependencies GADTs MultiParamTypeClasses RankNTypes ScopedTypeVariables TupleSections TypeFamilies TypeOperators
   ghc-options: -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       adjunctions
     , base >=4.7 && <5
     , hspec
     , lear
+    , lens
     , recursion-schemes
     , vector-space
   default-language: Haskell2010

@@ -17,6 +17,7 @@ dependencies:
 - adjunctions
 - recursion-schemes
 - vector-space
+- lens
 
 library:
   source-dirs: src
@@ -34,6 +35,17 @@ tests:
     - hspec
 
 default-extensions:
+- DataKinds
+- DeriveFunctor
 - DeriveGeneric
-- TypeFamilies
+- DeriveTraversable
+- ExistentialQuantification
 - FlexibleContexts
+- FunctionalDependencies
+- GADTs
+- MultiParamTypeClasses
+- RankNTypes
+- ScopedTypeVariables
+- TupleSections
+- TypeFamilies
+- TypeOperators

@@ -227,9 +227,7 @@ newline: native
 #
 # No language extensions are enabled by default.
 language_extensions:
-    - BangPatterns
     - DataKinds
-    - DefaultSignatures
     - DeriveFoldable
     - DeriveFunctor
     - DeriveGeneric
@@ -240,13 +238,14 @@ language_extensions:
     - OverloadedStrings
     - PartialTypeSignatures
     - PatternSynonyms
-    - QuantifiedConstraints
     - RankNTypes
-    - RecordWildCards
     - ScopedTypeVariables
-    - TupleSections
     - TypeApplications
-    - TypeFamilies
     - TypeOperators
     - TypeSynonymInstances
     - ViewPatterns
+    - TypeFamilies
+    - QuantifiedConstraints
+    - ExistentialQuantification
+    - DefaultSignatures
+    - BangPatterns

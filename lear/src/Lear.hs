@@ -1,95 +1,186 @@
+{-# LANGUAGE UndecidableInstances #-}
+
 module Lear where
 
-import qualified Control.Category        as C
-import           Data.AdditiveGroup
-import           Data.Functor.Adjunction
-import           Data.Functor.Foldable
-import           Data.VectorSpace
-import           GHC.Generics            (Generic)
+import qualified Control.Category as C
+import Control.Lens
+import Control.Monad
+import Data.AdditiveGroup
+import Data.Bifunctor
+import Data.Functor.Adjunction
+import Data.Functor.Foldable
+import Data.Functor.Rep (tabulate)
+import Data.Monoid (Endo (..))
+import Data.Tuple (swap)
+import Data.VectorSpace
+  ( AdditiveGroup (..),
+    VectorSpace (..),
+    lerp,
+  )
+import GHC.Generics (Generic)
 
-data Learn p a b = Learn
-    { impl :: (p,a) -> b
-    , upd  :: (p, a, b) -> p
-    , req  :: (p, a, b) -> a
-    } deriving (Generic)
+newtype Lear p a b
+  = Lear
+      -- We return a p -> p rather than a p so that updates can be composed.
+      -- This is more general than using a product, and also nicer to use since
+      -- you can keep classy lenses over p.
+      -- That said, I'm not sure updates that are not independent make sense
+      -- (prob: that don't commute).
+      { getLear :: p -> a -> (b, b -> (p -> p, a))
+      }
+  deriving (Generic)
 
-instance C.Category (Learn p) where
-  id = Learn
-    { impl = (\(_,x) -> x)
-    , upd = (\(p,_,_) -> p)
-    , req = (\(_,a,_) -> a)
-    }
-  f . g = Learn
-    { impl = i
-    , req = r
-    , upd = u
-    }
-    where
-      i (p,a) = impl f (p, impl g (p, a))
-      r (p,a,c) =
-        let b = impl g (p, a)
-            req0 = req f (p,b,c)
-        in req g (p,a,req0)
-      u (p,a,c) =
-        let b = impl g (p,a)
-        in upd g (upd f (p,b,c), a, req f (p,b,c))
+instance C.Category (Lear p) where
+  id = Lear $ \p a -> (a, const (id, a))
 
-instance (AdditiveGroup p, AdditiveGroup a, AdditiveGroup b)
-  => AdditiveGroup (Learn p a b)
+  Lear g . Lear f = Lear $ \p a ->
+    let (b, f') = f p a
+        (c, g') = g p b
+     in ( c,
+          \c' ->
+            let (pg, b') = g' c'
+                (pf, a') = f' b'
+             in (pf . pg, a')
+        )
 
-instance (VectorSpace p, VectorSpace a, VectorSpace b
-  , Scalar b ~ Scalar p, Scalar a ~ Scalar b)
-  => VectorSpace (Learn p a b) where
-  type Scalar (Learn p a b) = Scalar p
-  s *^ l = Learn
-    { impl = \(p,a) -> s *^ impl l (p,a)
-    , upd = \(p,a,b) -> s *^ upd l (p,a,b)
-    , req = \(p,a,b) -> s *^ req l (p,a,b)
-    }
+instance
+  (AdditiveGroup p, AdditiveGroup a, AdditiveGroup b) =>
+  AdditiveGroup (Lear p a b)
+
+instance
+  ( VectorSpace p,
+    VectorSpace a,
+    VectorSpace b,
+    Scalar p ~ Scalar a,
+    Scalar p ~ Scalar b
+  ) =>
+  VectorSpace (Lear p a b)
+  where
+  type Scalar (Lear p a b) = Scalar p
+
+  s *^ Lear f = Lear $ \p a ->
+    let (b, lin) = f p a
+     in ( s *^ b,
+          \b ->
+            let (updP, a') = lin b
+             in (\p' -> s *^ updP p', s *^ a')
+        )
+
+backprop :: Lear p a b -> p -> a -> (b, b -> (p, a))
+backprop (Lear f) p a =
+  let (b, lin) = f p a
+   in (b, \b' -> first ($ p) $ lin b)
 
 -- | Make a learner never learn.
 --
 -- Instead, it always sends as update whatever it received, and always asks for
 -- input whatever it received.
-stultify :: Learn p a b -> Learn p a b
-stultify l = l { upd = \(p,a,b) -> p, req = \(p,a,b) -> a }
-
-forwards :: Learn p a b -> p -> a -> b
-forwards = curry . impl
+stultify :: Lear p a b -> Lear p a b
+stultify (Lear f) = Lear $ \p a -> (fst $ f p a, const (id, a))
 
 -- | Multiply learning rate by a scalar.
-atRate :: VectorSpace (Learn p a b) => Learn p a b -> Scalar p -> Learn p a b
-atRate l r = lerp l (stultify l) r
+atRate :: VectorSpace (Lear p a b) => Lear p a b -> Scalar p -> Lear p a b
+atRate l = lerp l (stultify l)
 
--- | Lift a learner via adjunctions.
-adjunct :: (Eq (l ()), Adjunction l r) => Learn p a b -> Learn (r p) (l a) b
-adjunct lear = Learn
-    { impl = uncurry $ zapWithAdjunction (curry $ impl lear)
-    , upd = \(rp,la,b) ->
-        let zapped = zapWithAdjunction (\p a -> upd lear (p,a,b)) rp la
-        in tabulateAdjunction (\lun -> if lun == (const () <$> la)
-                                       then zapped
-                                       else indexAdjunction rp lun)
-    , req = \(rp,la,b) ->
-        let zapped = zapWithAdjunction (\p a -> req lear (p,a,b)) rp la
-        in const zapped <$> la
-    }
+-- | Add an error function. This means setting the learning rate to the linear
+-- interpolation (weighted by resulting scalar) of "total learning" and "no
+-- learning".
+--
+-- Error functions are like learning rates in that they cannot be inspected,
+-- but can be composed and "undone". That is, if f x y * g x y == 1, then
+--
+-- > withError f . withError g == id
+withError ::
+  (Scalar p ~ Scalar a, VectorSpace p, VectorSpace a) =>
+  -- | actual -> expected -> err
+  (a -> a -> Scalar a) ->
+  Lear p a a
+withError errFn = Lear $ \p a ->
+  (a, \a' -> let s = errFn a a' in ((s *^), lerp a a' s))
 
+-- * Adjoints
 
-cataL :: (Recursive t) => Learn p (Base t a) a -> Learn p t a
-cataL l = Learn
-  { impl = i
-  , upd = \(p,t,a) -> zygo (curry (impl l) p) (\b -> upd l (p,fst <$> b, a)) t
-  , req = error "not impl"
-  }
-  where
-    i (p,t) = cata (curry (impl l) p) t
+-- $adjoinNote
+-- `adjoin` and `adjoinCheaply` can be seen as two extremes options for how to
+-- lift a `Lear` to work on a left-adjoint input. `adjoin` uses the upper bound
+-- for the param, whereas `adjoinCheaply` uses the lower bound.
 
+-- | Lift param and input through an adjunction.
+
+-- $adjoinNote
+
+adjoin :: (Eq (l ()), Adjunction l r) => Lear p a b -> Lear (r p) (l a) b
+adjoin (Lear f) = Lear $ \rp la ->
+  let (b, f') = zapWithAdjunction f rp la
+   in ( b,
+        \b' ->
+          let (updP, a) = f' b'
+           in (tweakAdjAtPoint la updP, a <$ la)
+      )
+
+-- | Re-use the param for every possible element of a left-adjoint.
+
+-- $adjoinNote
+
+adjoinCheaply :: (Eq (l ()), Adjunction l r) => Lear p a b -> Lear p (l a) b
+adjoinCheaply (Lear f) = Lear $ \p la ->
+  let (b, f') = zapWithAdjunction f (tabulate $ const p) la
+   in ( b,
+        \b' ->
+          let (updP, a) = f' b'
+           in (updP, a <$ la)
+      )
+
+-- This Eq constraint is so ugly, and the whole function seems pretty
+-- inefficient.
+tweakAdjAtPoint :: (Eq (f ()), Adjunction f u) => f a -> (b -> b) -> u b -> u b
+tweakAdjAtPoint point f cont = tabulateAdjunction $ \ix ->
+  if void point == ix
+    then f $ indexAdjunction cont ix
+    else indexAdjunction cont ix
+
+con ::
+  (Traversable f) =>
+  (a -> (p -> p, f a)) ->
+  (a -> (p -> p, f a)) ->
+  (a -> (p -> p, f (f a)))
+con l r a =
+  let (p0, b0) = l a
+      (p, x) = sequence $ (first Endo <$> r) <$> b0
+   in (p0 . appEndo p, x)
+
+data E p a = E (p -> p) !a
+  deriving (Functor)
+
+instance Applicative (E p) where
+  pure = E id
+
+  E p0 f <*> E p1 a = E (p0 . p1) (f a)
+
+unE :: E p a -> (p -> p, a)
+unE (E f a) = (f, a)
+
+type instance Base (E x t) = Base t
+
+instance (Traversable (Base t), Corecursive t) => Corecursive (E x t) where
+  embed x = embed <$> sequenceA x
+
+cataL ::
+  forall p t a.
+  (Applicative (Base t), Corecursive t, Recursive t, Traversable (Base t)) =>
+  Lear p (Base t a) a ->
+  Lear p t a
+cataL (Lear f) = Lear $ \p t ->
+  let once :: (a, a -> (p -> p, Base t a))
+      once = cata (\x -> f p (fst <$> x)) t
+      co :: (a -> (x -> x, Base t a)) -> a -> (x -> x, t)
+      co f x = unE $ ana (\(E x a) -> let (p, b) = f a in E p <$> b) (E id x)
+   in co <$> once
 {-
-
-anaLearn :: (Corecursive t) => Learn p a (Base t a) -> Learn p a t
-anaLearn = _
-
-liftLens :: Lens a b -> Learn p a b
-liftLens = _
+anaL ::
+  forall p t a.
+  (Applicative (Base t), Corecursive t, Recursive t, Traversable (Base t)) =>
+  Lear p a (Base t a) ->
+  Lear p a t
+anaL (Lear f) = Lear $ \p t -> _
 -}
