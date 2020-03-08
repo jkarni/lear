@@ -18,6 +18,8 @@ dependencies:
 - recursion-schemes
 - vector-space
 - lens
+- mtl
+- ghc-typelits-natnormalise
 
 library:
   source-dirs: src
@@ -41,6 +43,7 @@ default-extensions:
 - DeriveTraversable
 - ExistentialQuantification
 - FlexibleContexts
+- FlexibleInstances
 - FunctionalDependencies
 - GADTs
 - MultiParamTypeClasses

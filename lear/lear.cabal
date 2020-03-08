@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 9b05f7be6c29e5fefb85ac929381c33fd340ca0c192dc982779e77f5375578bc
+-- hash: 14ff3a348a2230e2e3a888a217e89c84f592ef62ca018f2fb23d136b6baa7b95
 
 name:           lear
 version:        0.1.0.0
@@ -28,17 +28,19 @@ source-repository head
 library
   exposed-modules:
       Lear
-      Lear.AsVector
       Lear.SimpleDeriv
+      Lear.Spans
   other-modules:
       Paths_lear
   hs-source-dirs:
       src
-  default-extensions: DataKinds DeriveFunctor DeriveGeneric DeriveTraversable ExistentialQuantification FlexibleContexts FunctionalDependencies GADTs MultiParamTypeClasses RankNTypes ScopedTypeVariables TupleSections TypeFamilies TypeOperators
+  default-extensions: DataKinds DeriveFunctor DeriveGeneric DeriveTraversable ExistentialQuantification FlexibleContexts FlexibleInstances FunctionalDependencies GADTs MultiParamTypeClasses RankNTypes ScopedTypeVariables TupleSections TypeFamilies TypeOperators
   build-depends:
       adjunctions
     , base >=4.7 && <5
+    , ghc-typelits-natnormalise
     , lens
+    , mtl
     , recursion-schemes
     , vector-space
   default-language: Haskell2010
@@ -50,14 +52,16 @@ test-suite lear-test
       Paths_lear
   hs-source-dirs:
       test
-  default-extensions: DataKinds DeriveFunctor DeriveGeneric DeriveTraversable ExistentialQuantification FlexibleContexts FunctionalDependencies GADTs MultiParamTypeClasses RankNTypes ScopedTypeVariables TupleSections TypeFamilies TypeOperators
+  default-extensions: DataKinds DeriveFunctor DeriveGeneric DeriveTraversable ExistentialQuantification FlexibleContexts FlexibleInstances FunctionalDependencies GADTs MultiParamTypeClasses RankNTypes ScopedTypeVariables TupleSections TypeFamilies TypeOperators
   ghc-options: -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       adjunctions
     , base >=4.7 && <5
+    , ghc-typelits-natnormalise
     , hspec
     , lear
     , lens
+    , mtl
     , recursion-schemes
     , vector-space
   default-language: Haskell2010
