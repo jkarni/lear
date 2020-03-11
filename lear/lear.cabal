@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 14ff3a348a2230e2e3a888a217e89c84f592ef62ca018f2fb23d136b6baa7b95
+-- hash: 6ebd1a20da538fc673bdc42bf2a234bcd570fc82c4b870c3d76237e757bc8d90
 
 name:           lear
 version:        0.1.0.0
@@ -34,10 +34,11 @@ library
       Paths_lear
   hs-source-dirs:
       src
-  default-extensions: DataKinds DeriveFunctor DeriveGeneric DeriveTraversable ExistentialQuantification FlexibleContexts FlexibleInstances FunctionalDependencies GADTs MultiParamTypeClasses RankNTypes ScopedTypeVariables TupleSections TypeFamilies TypeOperators
+  default-extensions: ConstraintKinds DataKinds DeriveFunctor DeriveGeneric DeriveTraversable ExistentialQuantification FlexibleContexts FlexibleInstances FunctionalDependencies GADTs MultiParamTypeClasses QuantifiedConstraints RankNTypes ScopedTypeVariables StandaloneDeriving TupleSections TypeFamilies TypeOperators
   build-depends:
       adjunctions
     , base >=4.7 && <5
+    , distributive
     , ghc-typelits-natnormalise
     , lens
     , mtl
@@ -52,11 +53,13 @@ test-suite lear-test
       Paths_lear
   hs-source-dirs:
       test
-  default-extensions: DataKinds DeriveFunctor DeriveGeneric DeriveTraversable ExistentialQuantification FlexibleContexts FlexibleInstances FunctionalDependencies GADTs MultiParamTypeClasses RankNTypes ScopedTypeVariables TupleSections TypeFamilies TypeOperators
+  default-extensions: ConstraintKinds DataKinds DeriveFunctor DeriveGeneric DeriveTraversable ExistentialQuantification FlexibleContexts FlexibleInstances FunctionalDependencies GADTs MultiParamTypeClasses QuantifiedConstraints RankNTypes ScopedTypeVariables StandaloneDeriving TupleSections TypeFamilies TypeOperators
   ghc-options: -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       adjunctions
+    , backprop
     , base >=4.7 && <5
+    , distributive
     , ghc-typelits-natnormalise
     , hspec
     , lear

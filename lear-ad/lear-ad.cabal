@@ -1,0 +1,56 @@
+cabal-version: 1.12
+
+-- This file has been generated from package.yaml by hpack version 0.32.0.
+--
+-- see: https://github.com/sol/hpack
+--
+-- hash: 8baa377c09964956e53396d9a77bba617d7cfda9388097d3852d09d495bb8ce9
+
+name:           lear-ad
+version:        0.1.0.0
+description:    Please see the README on GitHub at <https://github.com/jkarni/lear#readme>
+homepage:       https://github.com/jkarni/lear#readme
+bug-reports:    https://github.com/jkarni/lear/issues
+author:         Julian K. Arni
+maintainer:     jkarni@riseup.net
+copyright:      2020 Julian K. Arni
+license:        BSD3
+license-file:   LICENSE
+build-type:     Simple
+extra-source-files:
+    README.md
+    ChangeLog.md
+
+source-repository head
+  type: git
+  location: https://github.com/jkarni/lear
+
+library
+  exposed-modules:
+      Lear.AD
+  other-modules:
+      Paths_lear_ad
+  hs-source-dirs:
+      src
+  default-extensions: RankNTypes FlexibleContexts
+  build-depends:
+      backprop
+    , base >=4.7 && <5
+    , lear
+  default-language: Haskell2010
+
+test-suite lear-backprop-test
+  type: exitcode-stdio-1.0
+  main-is: Spec.hs
+  other-modules:
+      Paths_lear_ad
+  hs-source-dirs:
+      test
+  default-extensions: RankNTypes FlexibleContexts
+  ghc-options: -threaded -rtsopts -with-rtsopts=-N
+  build-depends:
+      backprop
+    , base >=4.7 && <5
+    , lear
+    , lear-backprop
+  default-language: Haskell2010

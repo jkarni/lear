@@ -15,6 +15,7 @@ description:         Please see the README on GitHub at <https://github.com/gith
 dependencies:
 - base >= 4.7 && < 5
 - adjunctions
+- distributive
 - recursion-schemes
 - vector-space
 - lens
@@ -34,9 +35,11 @@ tests:
     - -with-rtsopts=-N
     dependencies:
     - lear
+    - backprop
     - hspec
 
 default-extensions:
+- ConstraintKinds
 - DataKinds
 - DeriveFunctor
 - DeriveGeneric
@@ -47,8 +50,10 @@ default-extensions:
 - FunctionalDependencies
 - GADTs
 - MultiParamTypeClasses
+- QuantifiedConstraints
 - RankNTypes
 - ScopedTypeVariables
+- StandaloneDeriving
 - TupleSections
 - TypeFamilies
 - TypeOperators

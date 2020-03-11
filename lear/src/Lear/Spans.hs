@@ -3,32 +3,86 @@
 
 module Lear.Spans where
 
+import Control.Applicative
 import Control.Monad.Cont
-import GHC.TypeNats
+import Data.Distributive
+import Data.Functor.Rep
+import Data.Proxy
+import GHC.Exts
+
+data Nat = Z | S Nat
+  deriving (Show, Eq)
+
+class LTE (a :: Nat) (b :: Nat)
+
+newtype NatLTE (n :: Nat) = NatLTE {getNatLTE :: Int}
 
 data Vec n a where
-  EmptyVec :: Vec 0 a
-  (:::) :: a -> Vec n a -> Vec (n + 1) a
+  EmptyVec :: Vec Z a
+  (:::) :: a -> Vec n a -> Vec (S n) a
 
 infixr 3 :::
 
-instance {-# OVERLAPPING #-} Num a => Num (Vec 1 a) where
-  fromInteger x = fromInteger x ::: EmptyVec
-  (a ::: _) + (b ::: _) = a + b ::: EmptyVec
-  (a ::: _) * (b ::: _) = a * b ::: EmptyVec
-  (a ::: _) - (b ::: _) = a - b ::: EmptyVec
-  abs (a ::: _) = abs a ::: EmptyVec
-  signum (a ::: _) = signum a ::: EmptyVec
+deriving instance Functor (Vec n)
 
-{- TODO: Do this properly
-instance {-# OVERLAPPABLE #-} (Num a, Num (Vec (n - 1) a)) => Num (Vec n a) where
-  fromInteger x = fromInteger x ::: (fromInteger x :: Vec (n - 1) a)
-  (a ::: as) + (b ::: bs) = a + b ::: (as + bs :: Vec (n - 1) a)
-  (a ::: as) * (b ::: bs) = a * b ::: (as * bs :: Vec (n - 1) a)
-  (a ::: as) - (b ::: bs) = a - b ::: (as - bs :: Vec (n - 1) a)
-  abs (a ::: as) = abs a ::: (abs as :: Vec (n - 1) a)
-  signum (a ::: as) = signum a ::: (signum as :: Vec (n - 1) a)
--}
+deriving instance Foldable (Vec n)
+
+deriving instance Traversable (Vec n)
+
+instance Applicative (Vec Z) where
+  pure _ = EmptyVec
+  EmptyVec <*> _ = EmptyVec
+
+instance Applicative (Vec n) => Applicative (Vec (S n)) where
+  pure x = x ::: pure x
+  (f ::: fs) <*> (x ::: xs) = f x ::: (fs <*> xs)
+
+instance Representable (Vec n) => Distributive (Vec n) where
+  distribute = distributeRep
+
+instance
+  ( Representable (Vec n),
+    Rep (Vec n) ~ NatLTE n
+  ) =>
+  Representable (Vec (S n))
+  where
+  type Rep (Vec (S n)) = NatLTE (S n)
+  tabulate f = f (NatLTE 0) ::: tabulate f'
+    where
+      f' (NatLTE n) = f (NatLTE $ n - 1)
+  index (h ::: t) (NatLTE n) = if n == 0 then h else index t (NatLTE $ n - 1)
+
+instance IsList (Vec Z a) where
+  type Item (Vec Z a) = a
+  toList _ = []
+  fromList _ = EmptyVec
+
+instance (Item (Vec n a) ~ a, IsList (Vec n a)) => IsList (Vec (S n) a) where
+  type Item (Vec (S n) a) = a
+  toList (a ::: as) = a : toList as
+  fromList (a : as) = a ::: fromList as
+
+instance
+  (Applicative (Vec n), Num (Item (Vec n a)), IsList (Vec n a), Num a) =>
+  Num (Vec n a)
+  where
+  fromInteger x = fromList $ repeat $ fromInteger x
+  (+) = liftA2 (+)
+  (*) = liftA2 (*)
+  (-) = liftA2 (-)
+  abs = fmap abs
+  signum = fmap signum
+
+instance
+  ( Applicative (Vec n),
+    Fractional (Item (Vec n a)),
+    IsList (Vec n a),
+    Fractional a
+  ) =>
+  Fractional (Vec n a)
+  where
+  fromRational x = fromList $ repeat $ fromRational x
+  recip = fmap recip
 
 -- | A class for embedding and projecting from R^n.
 --
@@ -40,10 +94,14 @@ instance {-# OVERLAPPABLE #-} (Num a, Num (Vec (n - 1) a)) => Num (Vec n a) wher
 -- allows keeping multiple elements of the type, and doing some interpolation
 -- on the result.
 class Spans a n where
+  -- Having a type that is embeddable in R^n doesn't tell us everything we
+  -- might want to know about the type. If elements are not linearly
+  -- independent, it still matters how many elements that type has for
+  -- determining the theoretical minimum widths of NN layers [Colah, 2014].
   proj :: forall b. RealFrac b => Vec n b -> Cont b a
   embed :: forall b. RealFrac b => a -> Vec n b
 
-instance Spans Int 1 where
+instance Spans Int (S Z) where
   embed x = fromIntegral x ::: EmptyVec
   proj (a ::: _) = cont $ \f ->
     let low = floor a
@@ -69,3 +127,7 @@ outputAsVec f d = embed $ f d
 asVec :: (Spans a n, Spans b m) => (a -> b) -> Vec n Double -> Vec m Double
 asVec f v = runCont (proj v) _
 -}
+
+{-
+[Colah, 2014] http://colah.github.io/posts/2014-03-NN-Manifolds-Topology/
+ -}

@@ -69,7 +69,16 @@ instance
 backprop :: Lear p a b -> p -> a -> (b, b -> (p, a))
 backprop (Lear f) p a =
   let (b, lin) = f p a
-   in (b, \b' -> first ($ p) $ lin b)
+   in (b, first ($ p) . lin)
+
+runLear :: Lear p a b -> p -> a -> b
+runLear l p a = fst (backprop l p a)
+
+learnOne :: Lear p a b -> p -> a -> b -> (p, a)
+learnOne l p a = snd (backprop l p a)
+
+grad :: Lear p a b -> p -> a -> b -> (p, a)
+grad l p a = snd (backprop l p a)
 
 -- | Make a learner never learn.
 --
