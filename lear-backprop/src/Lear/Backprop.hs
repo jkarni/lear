@@ -1,6 +1,5 @@
 module Lear.Backprop where
 
-import Data.Bifunctor
 import Lear
 import Numeric.Backprop
 

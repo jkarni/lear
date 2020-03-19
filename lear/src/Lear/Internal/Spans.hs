@@ -1,13 +1,12 @@
 {-# LANGUAGE UndecidableInstances #-}
 {-# OPTIONS_GHC -fplugin GHC.TypeLits.Normalise #-}
 
-module Lear.Spans where
+module Lear.Internal.Spans where
 
 import Control.Applicative
 import Control.Monad.Cont
 import Data.Distributive
 import Data.Functor.Rep
-import Data.Proxy
 import GHC.Exts
 
 data Nat = Z | S Nat
@@ -18,8 +17,8 @@ class LTE (a :: Nat) (b :: Nat)
 newtype NatLTE (n :: Nat) = NatLTE {getNatLTE :: Int}
 
 data Vec n a where
-  EmptyVec :: Vec Z a
-  (:::) :: a -> Vec n a -> Vec (S n) a
+  EmptyVec :: Vec 'Z a
+  (:::) :: a -> Vec n a -> Vec ('S n) a
 
 infixr 3 :::
 
@@ -29,11 +28,11 @@ deriving instance Foldable (Vec n)
 
 deriving instance Traversable (Vec n)
 
-instance Applicative (Vec Z) where
+instance Applicative (Vec 'Z) where
   pure _ = EmptyVec
   EmptyVec <*> _ = EmptyVec
 
-instance Applicative (Vec n) => Applicative (Vec (S n)) where
+instance Applicative (Vec n) => Applicative (Vec ('S n)) where
   pure x = x ::: pure x
   (f ::: fs) <*> (x ::: xs) = f x ::: (fs <*> xs)
 
@@ -44,23 +43,24 @@ instance
   ( Representable (Vec n),
     Rep (Vec n) ~ NatLTE n
   ) =>
-  Representable (Vec (S n))
+  Representable (Vec ('S n))
   where
-  type Rep (Vec (S n)) = NatLTE (S n)
+  type Rep (Vec ('S n)) = NatLTE ('S n)
   tabulate f = f (NatLTE 0) ::: tabulate f'
     where
       f' (NatLTE n) = f (NatLTE $ n - 1)
   index (h ::: t) (NatLTE n) = if n == 0 then h else index t (NatLTE $ n - 1)
 
-instance IsList (Vec Z a) where
-  type Item (Vec Z a) = a
+instance IsList (Vec 'Z a) where
+  type Item (Vec 'Z a) = a
   toList _ = []
   fromList _ = EmptyVec
 
-instance (Item (Vec n a) ~ a, IsList (Vec n a)) => IsList (Vec (S n) a) where
-  type Item (Vec (S n) a) = a
+instance (Item (Vec n a) ~ a, IsList (Vec n a)) => IsList (Vec ('S n) a) where
+  type Item (Vec ('S n) a) = a
   toList (a ::: as) = a : toList as
   fromList (a : as) = a ::: fromList as
+  fromList [] = error "Empty list"
 
 instance
   (Applicative (Vec n), Num (Item (Vec n a)), IsList (Vec n a), Num a) =>
@@ -101,7 +101,7 @@ class Spans a n where
   proj :: forall b. RealFrac b => Vec n b -> Cont b a
   embed :: forall b. RealFrac b => a -> Vec n b
 
-instance Spans Int (S Z) where
+instance Spans Int ('S 'Z) where
   embed x = fromIntegral x ::: EmptyVec
   proj (a ::: _) = cont $ \f ->
     let low = floor a
