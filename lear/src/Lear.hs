@@ -200,10 +200,10 @@ anaL (Lear f) = Lear $ \p t -> _
 -- * Lenses
 
 liftLens :: Lens (p, a) (p, a) b b -> Lear p a b
-liftLens l = Lear _
+liftLens l = Lear $ \p a -> ((p, a) ^. l, \b' -> first const $ (p, a) & l .~ b')
 
 liftLens' :: Lens a a b b -> Lear p a b
-liftLens' l = Lear _
+liftLens' l = liftLens (_2 . l)
 
 look :: forall sel a b p. HasAny sel a a b b => Lear p a b
 look = liftLens' (the @sel)
