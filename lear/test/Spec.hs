@@ -51,6 +51,16 @@ atRateSpec =
 linear :: Lear Float Float Float
 linear = backpropToLear $ \p x -> p * x
 
+-- Change to this:
+-- linear = param * input
+
+{-
+data P = P {weight :: Float, bias :: Float}
+
+linear' :: Lear P Float Float
+linear' = (param . look @"weight") * input + (param . look @"bias")
+-}
+
 -- ** Approximate Equality
 
 infix 4 ~~

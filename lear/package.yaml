@@ -61,3 +61,4 @@ default-extensions:
 - TypeOperators
 - DefaultSignatures
 - TypeApplications
+- PolyKinds

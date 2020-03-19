@@ -18,6 +18,29 @@ newtype Lear p a b
       }
   deriving (Generic)
 
+liftOp ::
+  (Num a, Num b) =>
+  (forall a. Num a => a -> a -> a) ->
+  Lear p a b ->
+  Lear p a b ->
+  Lear p a b
+liftOp (?) (Lear x) (Lear y) = Lear $ \p a ->
+  let (bx, linx) = x p a
+      (by, liny) = y p a
+   in ( bx ? by,
+        \b' ->
+          let (fpx, ax) = linx b'
+              (fpy, ay) = liny b'
+           in -- Not sure about ax ? ay...
+              (fpx . fpy, ax ? ay)
+      )
+
+instance (Num a, Num b) => Num (Lear p a b) where
+  fromInteger x = Lear $ \p a -> (fromInteger x, const (const p, a))
+  (+) = liftOp (+)
+  (-) = liftOp (-)
+  (*) = liftOp (*)
+
 instance C.Category (Lear p) where
   id = Lear $ \_ a -> (a, const (id, a))
 

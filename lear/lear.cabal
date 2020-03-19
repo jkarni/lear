@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: e0521a888b8b26576cd0a9766a1ca3d8b9a988e71bbfe5ec1bcb872ef8413b32
+-- hash: c9ad9c3f338b2f284bc1f96767ca03fed411eaa625857a27d5fcaed582cf3faf
 
 name:           lear
 version:        0.1.0.0
@@ -37,7 +37,7 @@ library
       Paths_lear
   hs-source-dirs:
       src
-  default-extensions: ConstraintKinds DataKinds DeriveFunctor DeriveGeneric DeriveTraversable ExistentialQuantification FlexibleContexts FlexibleInstances FunctionalDependencies GADTs MultiParamTypeClasses QuantifiedConstraints RankNTypes ScopedTypeVariables StandaloneDeriving TupleSections TypeFamilies TypeOperators DefaultSignatures TypeApplications
+  default-extensions: ConstraintKinds DataKinds DeriveFunctor DeriveGeneric DeriveTraversable ExistentialQuantification FlexibleContexts FlexibleInstances FunctionalDependencies GADTs MultiParamTypeClasses QuantifiedConstraints RankNTypes ScopedTypeVariables StandaloneDeriving TupleSections TypeFamilies TypeOperators DefaultSignatures TypeApplications PolyKinds
   build-depends:
       adjunctions
     , base >=4.7 && <5
@@ -57,7 +57,7 @@ test-suite lear-test
       Paths_lear
   hs-source-dirs:
       test
-  default-extensions: ConstraintKinds DataKinds DeriveFunctor DeriveGeneric DeriveTraversable ExistentialQuantification FlexibleContexts FlexibleInstances FunctionalDependencies GADTs MultiParamTypeClasses QuantifiedConstraints RankNTypes ScopedTypeVariables StandaloneDeriving TupleSections TypeFamilies TypeOperators DefaultSignatures TypeApplications
+  default-extensions: ConstraintKinds DataKinds DeriveFunctor DeriveGeneric DeriveTraversable ExistentialQuantification FlexibleContexts FlexibleInstances FunctionalDependencies GADTs MultiParamTypeClasses QuantifiedConstraints RankNTypes ScopedTypeVariables StandaloneDeriving TupleSections TypeFamilies TypeOperators DefaultSignatures TypeApplications PolyKinds
   ghc-options: -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       QuickCheck
