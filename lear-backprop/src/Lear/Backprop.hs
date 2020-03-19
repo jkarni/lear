@@ -5,10 +5,14 @@ import Lear
 import Numeric.Backprop
 
 backpropToLear ::
-  (Backprop p, Backprop a, Backprop b) =>
-  (forall s. (Reifies s W) => BVar s p -> BVar s a -> BVar s b) ->
-  Lear p a b
-backpropToLear f = Lear $ tweak $ backpropWith2 f
+  (Backprop p, Fractional p) =>
+  (forall s. (Reifies s W) => BVar s p -> BVar s p -> BVar s p) ->
+  Lear p p p
+backpropToLear f = Lear f'
   where
-    -- I kid you not
-    tweak = fmap (fmap (second (fmap (first const))))
+    f' p a =
+      let (b, g) = backpropWith2 f p a
+       in ( b,
+            \b' ->
+              let (p', a') = g 1 in (const (p - (b - b') / p'), a - (b - b') / a')
+          )

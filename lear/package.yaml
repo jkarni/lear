@@ -21,6 +21,7 @@ dependencies:
 - lens
 - mtl
 - ghc-typelits-natnormalise
+- generic-lens
 
 library:
   source-dirs: src
@@ -37,6 +38,7 @@ tests:
     - lear
     - backprop
     - hspec
+    - QuickCheck
 
 default-extensions:
 - ConstraintKinds
@@ -57,3 +59,5 @@ default-extensions:
 - TupleSections
 - TypeFamilies
 - TypeOperators
+- DefaultSignatures
+- TypeApplications

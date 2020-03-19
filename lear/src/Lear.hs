@@ -1,3 +1,4 @@
+{-# LANGUAGE AllowAmbiguousTypes #-}
 {-# LANGUAGE UndecidableInstances #-}
 
 module Lear where
@@ -10,6 +11,7 @@ import Data.Bifunctor
 import Data.Functor.Adjunction
 import Data.Functor.Foldable
 import Data.Functor.Rep (tabulate)
+import Data.Generics.Product
 import Data.Monoid (Endo (..))
 import Data.Tuple (swap)
 import Data.VectorSpace
@@ -89,7 +91,7 @@ stultify (Lear f) = Lear $ \p a -> (fst $ f p a, const (id, a))
 
 -- | Multiply learning rate by a scalar.
 atRate :: VectorSpace (Lear p a b) => Lear p a b -> Scalar p -> Lear p a b
-atRate l = lerp l (stultify l)
+atRate l = lerp (stultify l) l
 
 -- | Add an error function. This means setting the learning rate to the linear
 -- interpolation (weighted by resulting scalar) of "total learning" and "no
@@ -185,6 +187,7 @@ cataL (Lear f) = Lear $ \p t ->
       co :: (a -> (x -> x, Base t a)) -> a -> (x -> x, t)
       co f x = unE $ ana (\(E x a) -> let (p, b) = f a in E p <$> b) (E id x)
    in co <$> once
+
 {-
 anaL ::
   forall p t a.
@@ -193,3 +196,20 @@ anaL ::
   Lear p a t
 anaL (Lear f) = Lear $ \p t -> _
 -}
+
+-- * Lenses
+
+liftLens :: Lens (p, a) (p, a) b b -> Lear p a b
+liftLens l = Lear _
+
+liftLens' :: Lens a a b b -> Lear p a b
+liftLens' l = Lear _
+
+look :: forall sel a b p. HasAny sel a a b b => Lear p a b
+look = liftLens' (the @sel)
+
+param :: Lear p a p
+param = Lear $ \p a -> (p, \p' -> (const p', a))
+
+input :: Lear p a a
+input = Lear $ \p a -> (a, (const p,))

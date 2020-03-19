@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 6ebd1a20da538fc673bdc42bf2a234bcd570fc82c4b870c3d76237e757bc8d90
+-- hash: cfbf61a4d882b4d022e224328732593dc1b13c63d9b0bd8c40f56c99fdf45347
 
 name:           lear
 version:        0.1.0.0
@@ -28,17 +28,19 @@ source-repository head
 library
   exposed-modules:
       Lear
+      Lear.Lens
       Lear.SimpleDeriv
       Lear.Spans
   other-modules:
       Paths_lear
   hs-source-dirs:
       src
-  default-extensions: ConstraintKinds DataKinds DeriveFunctor DeriveGeneric DeriveTraversable ExistentialQuantification FlexibleContexts FlexibleInstances FunctionalDependencies GADTs MultiParamTypeClasses QuantifiedConstraints RankNTypes ScopedTypeVariables StandaloneDeriving TupleSections TypeFamilies TypeOperators
+  default-extensions: ConstraintKinds DataKinds DeriveFunctor DeriveGeneric DeriveTraversable ExistentialQuantification FlexibleContexts FlexibleInstances FunctionalDependencies GADTs MultiParamTypeClasses QuantifiedConstraints RankNTypes ScopedTypeVariables StandaloneDeriving TupleSections TypeFamilies TypeOperators DefaultSignatures TypeApplications
   build-depends:
       adjunctions
     , base >=4.7 && <5
     , distributive
+    , generic-lens
     , ghc-typelits-natnormalise
     , lens
     , mtl
@@ -53,13 +55,15 @@ test-suite lear-test
       Paths_lear
   hs-source-dirs:
       test
-  default-extensions: ConstraintKinds DataKinds DeriveFunctor DeriveGeneric DeriveTraversable ExistentialQuantification FlexibleContexts FlexibleInstances FunctionalDependencies GADTs MultiParamTypeClasses QuantifiedConstraints RankNTypes ScopedTypeVariables StandaloneDeriving TupleSections TypeFamilies TypeOperators
+  default-extensions: ConstraintKinds DataKinds DeriveFunctor DeriveGeneric DeriveTraversable ExistentialQuantification FlexibleContexts FlexibleInstances FunctionalDependencies GADTs MultiParamTypeClasses QuantifiedConstraints RankNTypes ScopedTypeVariables StandaloneDeriving TupleSections TypeFamilies TypeOperators DefaultSignatures TypeApplications
   ghc-options: -threaded -rtsopts -with-rtsopts=-N
   build-depends:
-      adjunctions
+      QuickCheck
+    , adjunctions
     , backprop
     , base >=4.7 && <5
     , distributive
+    , generic-lens
     , ghc-typelits-natnormalise
     , hspec
     , lear
