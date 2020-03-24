@@ -16,6 +16,8 @@ dependencies:
 - base >= 4.7 && < 5
 - adjunctions
 - distributive
+- profunctors
+- optics
 - recursion-schemes
 - vector-space
 - lens

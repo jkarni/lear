@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: c9ad9c3f338b2f284bc1f96767ca03fed411eaa625857a27d5fcaed582cf3faf
+-- hash: 5ef8811696db6b940edb07d9f5d5b20bff49760ef792281b839d7acc504ad9f5
 
 name:           lear
 version:        0.1.0.0
@@ -46,6 +46,8 @@ library
     , ghc-typelits-natnormalise
     , lens
     , mtl
+    , optics
+    , profunctors
     , recursion-schemes
     , vector-space
   default-language: Haskell2010
@@ -71,6 +73,8 @@ test-suite lear-test
     , lear
     , lens
     , mtl
+    , optics
+    , profunctors
     , recursion-schemes
     , vector-space
   default-language: Haskell2010

@@ -1,12 +1,18 @@
+{-# LANGUAGE IncoherentInstances #-}
+
 module Lear.Internal.Type where
 
+import Control.Applicative
 import qualified Control.Category as C
+import Control.Lens
+import Data.Profunctor
 import Data.VectorSpace
   ( AdditiveGroup (..),
     VectorSpace (..),
   )
 import GHC.Generics (Generic)
 
+{-
 newtype Lear p a b
   = Lear
       -- We return a p -> p rather than a p so that updates can be composed.
@@ -17,7 +23,30 @@ newtype Lear p a b
       { getLear :: p -> a -> (b, b -> (p -> p, a))
       }
   deriving (Generic)
+-}
 
+-- type Lear p a b = Optic' A_Lens NoIx (p, a) (p, b)
+
+data Lear p a b
+  = Lear
+      {getLear :: forall f. (Functor f) => ((p, b) -> f (p, b)) -> (p, a) -> f (p, a)}
+
+t :: (Num p, Num a) => Lear p a Int -> Lear p a Int -> Lear p a Int
+t = (+)
+
+par :: Lear p a p
+par = Lear $ lens (\(p, _) -> (p, p)) const
+
+inp :: Lear p a a
+inp = Lear $ lens id (\_ x -> x)
+
+run :: Lear p a b -> (p, a) -> b
+run (Lear f) x = snd $ x ^. f
+
+back :: Lear p a b -> (p, a) -> b -> (p, a)
+back (Lear f) x b = x & f %~ _ -- \(p, _) -> (p, b)
+
+{-
 liftOp ::
   (Num a, Num b) =>
   (forall a. Num a => a -> a -> a) ->
@@ -34,30 +63,27 @@ liftOp (?) (Lear x) (Lear y) = Lear $ \p a ->
            in -- Not sure about ax ? ay...
               (fpx . fpy, ax ? ay)
       )
+-}
 
+instance (Num p, Num a) => Num (Lear p a b)
+-- negate = fmap negate
+-- Lear a + Lear b = Lear $ \f g -> liftA2 (++) (a f g) (b f g)
+--   where
+--     (++) :: (Num x, Num y) => (x, y) -> (x, y) -> (x, y)
+--     (a0, b0) ++ (a1, b1) = (a0 + a1, b0 + b1)
+-- (*) = liftA2 (*)
+-- fromInteger = pure . fromInteger
+-- abs = fmap abs
+-- signum = fmap signum
+{-
 instance (Num a, Num b) => Num (Lear p a b) where
   fromInteger x = Lear $ \p a -> (fromInteger x, const (const p, a))
   (+) = liftOp (+)
   (-) = liftOp (-)
   (*) = liftOp (*)
-
-instance C.Category (Lear p) where
-  id = Lear $ \_ a -> (a, const (id, a))
-
-  Lear g . Lear f = Lear $ \p a ->
-    let (b, f') = f p a
-        (c, g') = g p b
-     in ( c,
-          \c' ->
-            let (pg, b') = g' c'
-                (pf, a') = f' b'
-             in (pf . pg, a')
-        )
-
 instance
   (AdditiveGroup p, AdditiveGroup a, AdditiveGroup b) =>
   AdditiveGroup (Lear p a b)
-
 instance
   ( VectorSpace p,
     VectorSpace a,
@@ -76,3 +102,4 @@ instance
             let (updP, a') = lin b'
              in (\p' -> s *^ updP p', s *^ a')
         )
+-}
