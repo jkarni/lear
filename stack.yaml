@@ -5,3 +5,7 @@ packages:
 
 nix:
     enable: true
+
+extra-deps:
+- hspec-hedgehog-0.0.1.1@sha256:bbf992090eb2e3c1b8919150756bb4dc88c8c987992ee6f49ca9d3ec8cbddc96,1371
+- hedgehog-1.0.2@sha256:bc80f8df76a122c6c5d0bbf66efd53cca1c29691a53110628894802ba3f207e2,4582

@@ -38,6 +38,8 @@ tests:
     - lear
     - backprop
     - hspec
+    - hspec-hedgehog
+    - hedgehog >= 1.0.2
     - QuickCheck
 
 default-extensions:

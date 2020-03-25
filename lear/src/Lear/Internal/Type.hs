@@ -1,10 +1,12 @@
 module Lear.Internal.Type where
 
+import Control.Applicative
 import qualified Control.Category as C
 import Data.VectorSpace
   ( AdditiveGroup (..),
     VectorSpace (..),
   )
+import Debug.Trace
 import GHC.Generics (Generic)
 
 newtype Lear p a b
@@ -19,23 +21,23 @@ newtype Lear p a b
   deriving (Generic)
 
 liftOp ::
-  (Num a, Num b) =>
+  (Num a, Num p, Num b, Show a, Show p, Show b) =>
   (forall a. Num a => a -> a -> a) ->
   Lear p a b ->
   Lear p a b ->
   Lear p a b
 liftOp (?) (Lear x) (Lear y) = Lear $ \p a ->
-  let (bx, linx) = x p a
-      (by, liny) = y p a
-   in ( bx ? by,
+  let (bx, linx) = x (trace ("p=" ++ show p) p) (trace ("a=" ++ show a) a)
+      (by, liny) = y p (trace ("a=" ++ show a) a)
+   in ( (trace ("bx=" ++ show bx) bx) ? (trace ("by=" ++ show by) by),
         \b' ->
           let (fpx, ax) = linx b'
-              (fpy, ay) = liny b'
+              (fpy, ay) = liny (trace ("b'=" ++ show b') b')
            in -- Not sure about ax ? ay...
-              (fpx . fpy, ax ? ay)
+              (fpx . fpy, trace ("ax=" ++ show ax) ax - trace ("ay=" ++ show ay) ay)
       )
 
-instance (Num a, Num b) => Num (Lear p a b) where
+instance (Num a, Num p, Num b, Show p, Show b, Show a) => Num (Lear p a b) where
   fromInteger x = Lear $ \p a -> (fromInteger x, const (const p, a))
   (+) = liftOp (+)
   (-) = liftOp (-)

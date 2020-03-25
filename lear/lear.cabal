@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: c9ad9c3f338b2f284bc1f96767ca03fed411eaa625857a27d5fcaed582cf3faf
+-- hash: 8eb0621afffd2e2e95e10d3257ee97be1690c0b6d09fe247de087cead7811255
 
 name:           lear
 version:        0.1.0.0
@@ -67,7 +67,9 @@ test-suite lear-test
     , distributive
     , generic-lens
     , ghc-typelits-natnormalise
+    , hedgehog >=1.0.2
     , hspec
+    , hspec-hedgehog
     , lear
     , lens
     , mtl

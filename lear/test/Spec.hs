@@ -4,11 +4,14 @@ import Control.Category
 import Data.Bifunctor
 import Data.Functor.Foldable
 import Data.VectorSpace
+import GHC.Stack
+import qualified Hedgehog as H
+import qualified Hedgehog.Gen as H
+import qualified Hedgehog.Range as HR
 import Lear
 import Numeric.Backprop
 import Test.Hspec
-import Test.Hspec.QuickCheck
-import Test.QuickCheck
+import Test.Hspec.Hedgehog
 import Prelude hiding ((.))
 
 main :: IO ()
@@ -16,7 +19,8 @@ main =
   hspec $ do
     runLearSpec
     learnOneSpec
-    atRateSpec
+
+-- atRateSpec
 
 runLearSpec :: Spec
 runLearSpec =
@@ -27,11 +31,19 @@ runLearSpec =
 learnOneSpec :: Spec
 learnOneSpec =
   describe "learnOne" $ do
-    prop "returns the input if correct" $ \(x, y) ->
-      (x /= 0) ==> learnOne linear x y (x * y) == (x, y)
-    prop "returns the two fixes if incorrect" $ \(x, y, z) ->
+    it "returns the input if correct" $ hedgehog $ do
+      x <- H.forAll $ H.filter (/= 0) $ H.float (HR.constant (-100) 100)
+      y <- H.forAll $ H.float (HR.constant (-100) 100)
+      learnOne linear x y (x * y) === (x, y)
+    it "returns the two fixes if incorrect" $ hedgehog $ do
+      x <- H.forAll $ H.filter (/= 0) $ H.float (HR.constant (-100) 100)
+      y <- H.forAll $ H.float (HR.constant (-100) 100)
+      z <- H.forAll $ H.float (HR.constant (-100) 100)
       let (x', y') = learnOne linear x y z
-       in (x /= 0) ==> x' * y ~~ z && x * y' ~~ z
+      x' * y ~=~ z
+      x * y' ~=~ z
+
+{-
 
 atRateSpec :: Spec
 atRateSpec =
@@ -43,16 +55,18 @@ atRateSpec =
         ==> let res = x * y
              in learnOne linear x y (res + z) ~~ learnOne (linear `atRate` 0.1) x y (res + z / 0.1)
 
+-}
+
 -- * Helpers
 
 -- | A linear function passing through the origin without noise.
 --
 -- This is solvable from one datapoint, which makes testing easier.
 linear :: Lear Float Float Float
-linear = backpropToLear $ \p x -> p * x
+-- linear = backpropToLear $ \p x -> p * x
+linear = param * input
 
 -- Change to this:
--- linear = param * input
 
 {-
 data P = P {weight :: Float, bias :: Float}
@@ -62,6 +76,11 @@ linear' = (param . look @"weight") * input + (param . look @"bias")
 -}
 
 -- ** Approximate Equality
+
+infix 4 ~=~
+
+(~=~) :: (HasCallStack, MonadTest m, Show a, ApproximateEq a) => a -> a -> m ()
+x ~=~ y = withFrozenCallStack $ diff x (~~) y
 
 infix 4 ~~
 
