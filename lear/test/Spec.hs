@@ -32,11 +32,11 @@ learnOneSpec :: Spec
 learnOneSpec =
   describe "learnOne" $ do
     it "returns the input if correct" $ hedgehog $ do
-      x <- H.forAll $ H.filter (/= 0) $ H.float (HR.constant (-100) 100)
+      x <- H.forAll $ H.float (HR.constant (-100) 100)
       y <- H.forAll $ H.float (HR.constant (-100) 100)
       learnOne linear x y (x * y) ~=~ (x, y)
     it "returns the two fixes if incorrect" $ hedgehog $ do
-      x <- H.forAll $ H.filter (/= 0) $ H.float (HR.constant (-100) 100)
+      x <- H.forAll $ H.float (HR.constant (-100) 100)
       y <- H.forAll $ H.float (HR.constant (-100) 100)
       z <- H.forAll $ H.float (HR.constant (-100) 100)
       let (x', y') = learnOne linear x y z
