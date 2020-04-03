@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 8eb0621afffd2e2e95e10d3257ee97be1690c0b6d09fe247de087cead7811255
+-- hash: b8c619f195f42e47c7e208f9c502547a85d16c9acb91e12b7613035d0826683f
 
 name:           lear
 version:        0.1.0.0
@@ -41,9 +41,11 @@ library
   build-depends:
       adjunctions
     , base >=4.7 && <5
+    , containers
     , distributive
     , generic-lens
     , ghc-typelits-natnormalise
+    , groups
     , lens
     , mtl
     , recursion-schemes
@@ -64,9 +66,11 @@ test-suite lear-test
     , adjunctions
     , backprop
     , base >=4.7 && <5
+    , containers
     , distributive
     , generic-lens
     , ghc-typelits-natnormalise
+    , groups
     , hedgehog >=1.0.2
     , hspec
     , hspec-hedgehog

@@ -8,7 +8,6 @@ stdenv.mkDerivation {
   buildInputs = [
     ghc
     stack
-    stylish-haskell
     zlib
 ];
 }

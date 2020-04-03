@@ -26,8 +26,8 @@ adjoin (Lear f) = Lear $ \rp la ->
   let (b, f') = zapWithAdjunction f rp la
    in ( b,
         \b' ->
-          let (updP, a) = f' b'
-           in (tweakAdjAtPoint la updP, a <$ la)
+          let (updP, Endo updA) = f' b'
+           in (tweakAdjAtPoint la updP, Endo (updA <$>))
       )
 
 -- | Re-use the param for every possible element of a left-adjoint.
@@ -39,14 +39,14 @@ adjoinCheaply (Lear f) = Lear $ \p la ->
   let (b, f') = zapWithAdjunction f (tabulate $ const p) la
    in ( b,
         \b' ->
-          let (updP, a) = f' b'
-           in (updP, a <$ la)
+          let (updP, Endo updA) = f' b'
+           in (updP, Endo (updA <$>))
       )
 
 -- This Eq constraint is so ugly, and the whole function seems pretty
 -- inefficient.
-tweakAdjAtPoint :: (Eq (f ()), Adjunction f u) => f a -> (b -> b) -> u b -> u b
-tweakAdjAtPoint point f cont = tabulateAdjunction $ \ix ->
+tweakAdjAtPoint :: (Eq (f ()), Adjunction f u) => f a -> Endo b -> Endo (u b)
+tweakAdjAtPoint point (Endo f) = Endo $ \cont -> tabulateAdjunction $ \ix ->
   if void point == ix
     then f $ indexAdjunction cont ix
     else indexAdjunction cont ix

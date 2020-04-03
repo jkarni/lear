@@ -5,8 +5,10 @@ module Lear.Internal.Lens where
 import Control.Lens
 import Data.Bifunctor
 import Data.Generics.Product
+import Data.Monoid
 import Lear.Internal.Type
 
+{-
 liftLens :: Lens' (p, a) b -> Lear p a b
 liftLens l = Lear $ \p a -> ((p, a) ^. l, \b' -> first const $ (p, a) & l .~ b')
 
@@ -26,9 +28,10 @@ withParam (Lear f) ls = Lear $ \p a ->
           let (fp, a) = lin b'
            in ((& ls %~ fp), a)
       )
+-}
 
 param :: Lear p a p
-param = Lear $ \p a -> (p, \p' -> (const p', a))
+param = Lear $ \p a -> (p, \p' -> (Endo $ const p', mempty))
 
 input :: Lear p a a
-input = Lear $ \p a -> (a, (const p,))
+input = Lear $ \p a -> (a, \a' -> (mempty, Endo $ const a'))

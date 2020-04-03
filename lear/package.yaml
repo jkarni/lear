@@ -15,6 +15,7 @@ description:         Please see the README on GitHub at <https://github.com/gith
 dependencies:
 - base >= 4.7 && < 5
 - adjunctions
+- containers
 - distributive
 - recursion-schemes
 - vector-space
@@ -22,6 +23,7 @@ dependencies:
 - mtl
 - ghc-typelits-natnormalise
 - generic-lens
+- groups
 
 library:
   source-dirs: src

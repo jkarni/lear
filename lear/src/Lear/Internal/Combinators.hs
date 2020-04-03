@@ -1,6 +1,7 @@
 module Lear.Internal.Combinators where
 
 import Data.Bifunctor
+import Data.Monoid
 import Data.VectorSpace
   ( VectorSpace (..),
     lerp,
@@ -10,7 +11,7 @@ import Lear.Internal.Type
 backprop :: Lear p a b -> p -> a -> (b, b -> (p, a))
 backprop (Lear f) p a =
   let (b, lin) = f p a
-   in (b, first ($ p) . lin)
+   in (b, first (($ p) . appEndo) . second (($ a) . appEndo) . lin)
 
 runLear :: Lear p a b -> p -> a -> b
 runLear l p a = fst (backprop l p a)
@@ -26,12 +27,11 @@ grad l p a = snd (backprop l p a)
 -- Instead, it always sends as update whatever it received, and always asks for
 -- input whatever it received.
 stultify :: Lear p a b -> Lear p a b
-stultify (Lear f) = Lear $ \p a -> (fst $ f p a, const (id, a))
-
+stultify (Lear f) = Lear $ \p a -> (fst $ f p a, const mempty)
+{-
 -- | Multiply learning rate by a scalar.
 atRate :: VectorSpace (Lear p a b) => Lear p a b -> Scalar p -> Lear p a b
 atRate l = lerp (stultify l) l
-
 -- | Add an error function. This means setting the learning rate to the linear
 -- interpolation (weighted by resulting scalar) of "total learning" and "no
 -- learning".
@@ -47,3 +47,4 @@ withError ::
   Lear p a a
 withError errFn = Lear $ \_ a ->
   (a, \a' -> let s = errFn a a' in ((s *^), lerp a a' s))
+-}
