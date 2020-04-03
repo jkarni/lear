@@ -35,25 +35,6 @@ newtype Lear p a b
       }
   deriving (Generic)
 
-{-
-liftOp ::
-  (Num a, Num p, Num b, Show a, Show p, Show b) =>
-  (forall a. Num a => a -> a -> a) ->
-  Lear p a b ->
-  Lear p a b ->
-  Lear p a b
-liftOp (?) (Lear x) (Lear y) = Lear $ \p a ->
-  let (bx, linx) = x (trace ("p=" ++ show p) p) (trace ("a=" ++ show a) a)
-      (by, liny) = y p (trace ("a=" ++ show a) a)
-   in ( (trace ("bx=" ++ show bx) bx) ? (trace ("by=" ++ show by) by),
-        \b' ->
-          let (fpx, ax) = linx b'
-              (fpy, ay) = liny (trace ("b'=" ++ show b') b')
-           in -- Not sure about ax ? ay...
-              (fpx . fpy, trace ("ax=" ++ show ax) ax - trace ("ay=" ++ show ay) ay)
-      )
--}
-
 (&&&) :: Lear p a b0 -> Lear p a b1 -> Lear p a (b0, b1)
 Lear x &&& Lear y = Lear $ \p a ->
   let (b0, linx) = x p a
