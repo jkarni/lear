@@ -1,10 +1,10 @@
 cabal-version: 1.12
 
--- This file has been generated from package.yaml by hpack version 0.32.0.
+-- This file has been generated from package.yaml by hpack version 0.33.0.
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: b8c619f195f42e47c7e208f9c502547a85d16c9acb91e12b7613035d0826683f
+-- hash: 12d9a156d021950aad7f314440b1b03dd30263f696d0e050caa5b39bb923acc2
 
 name:           lear
 version:        0.1.0.0
@@ -37,13 +37,14 @@ library
       Paths_lear
   hs-source-dirs:
       src
-  default-extensions: ConstraintKinds DataKinds DeriveFunctor DeriveGeneric DeriveTraversable ExistentialQuantification FlexibleContexts FlexibleInstances FunctionalDependencies GADTs MultiParamTypeClasses QuantifiedConstraints RankNTypes ScopedTypeVariables StandaloneDeriving TupleSections TypeFamilies TypeOperators DefaultSignatures TypeApplications PolyKinds
+  default-extensions: ConstraintKinds DataKinds DefaultSignatures DeriveFunctor DeriveGeneric DeriveTraversable ExistentialQuantification FlexibleContexts FlexibleInstances FunctionalDependencies GADTs MultiParamTypeClasses PolyKinds QuantifiedConstraints RankNTypes ScopedTypeVariables StandaloneDeriving TupleSections TypeApplications TypeFamilies TypeOperators
   build-depends:
       adjunctions
     , base >=4.7 && <5
     , containers
     , distributive
     , generic-lens
+    , ghc-prim
     , ghc-typelits-natnormalise
     , groups
     , lens
@@ -59,7 +60,7 @@ test-suite lear-test
       Paths_lear
   hs-source-dirs:
       test
-  default-extensions: ConstraintKinds DataKinds DeriveFunctor DeriveGeneric DeriveTraversable ExistentialQuantification FlexibleContexts FlexibleInstances FunctionalDependencies GADTs MultiParamTypeClasses QuantifiedConstraints RankNTypes ScopedTypeVariables StandaloneDeriving TupleSections TypeFamilies TypeOperators DefaultSignatures TypeApplications PolyKinds
+  default-extensions: ConstraintKinds DataKinds DefaultSignatures DeriveFunctor DeriveGeneric DeriveTraversable ExistentialQuantification FlexibleContexts FlexibleInstances FunctionalDependencies GADTs MultiParamTypeClasses PolyKinds QuantifiedConstraints RankNTypes ScopedTypeVariables StandaloneDeriving TupleSections TypeApplications TypeFamilies TypeOperators
   ghc-options: -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       QuickCheck
@@ -69,6 +70,7 @@ test-suite lear-test
     , containers
     , distributive
     , generic-lens
+    , ghc-prim
     , ghc-typelits-natnormalise
     , groups
     , hedgehog >=1.0.2

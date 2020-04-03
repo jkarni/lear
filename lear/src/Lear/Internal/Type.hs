@@ -15,22 +15,8 @@ import Data.VectorSpace
 import Debug.Trace
 import GHC.Generics (Generic)
 
-{-
-newtype FreeVec a = FreeVec {getFreeVec :: Map.Map a Float}
-
-instance
-
-instance AdditiveGroup (FreeVec a) where
-  zeroV :: FreeVec mempty
--}
-
 newtype Lear p a b
   = Lear
-      -- We return a p -> p rather than a p so that updates can be composed.
-      -- This is more general than using a product, and also nicer to use since
-      -- you can keep classy lenses over p.
-      -- That said, I'm not sure updates that are not independent make sense
-      -- (prob: that don't commute).
       { getLear :: p -> a -> (b, b -> (Endo p, Endo a))
       }
   deriving (Generic)
@@ -73,9 +59,6 @@ instance (Fractional b) => Num (Lear p a b) where
   a + b = coerce $ conc C.. (coerce $ a &&& b :: Lear p a (Sum b, Sum b))
   a * b = coerce $ conc C.. (coerce $ a &&& b :: Lear p a (Product b, Product b))
 
--- x + y = plusL C.. (x &&& y)
--- (+) = (^+^)
-
 instance C.Category (Lear p) where
   id = Lear $ \_ a -> (a, const mempty)
 
@@ -88,27 +71,3 @@ instance C.Category (Lear p) where
                 (pf, a') = f' (appEndo b' b)
              in (pf <> pg, a')
         )
-{-
-instance
-  (AdditiveGroup p, AdditiveGroup a, AdditiveGroup b) =>
-  AdditiveGroup (Lear p a b)
-
-instance
-  ( VectorSpace p,
-    VectorSpace a,
-    VectorSpace b,
-    Scalar p ~ Scalar a,
-    Scalar p ~ Scalar b
-  ) =>
-  VectorSpace (Lear p a b)
-  where
-  type Scalar (Lear p a b) = Scalar p
-
-  s *^ Lear f = Lear $ \p a ->
-    let (b, lin) = f p a
-     in ( s *^ b,
-          \b' ->
-            let (updP, a') = lin b'
-             in (\p' -> s *^ updP p', s *^ a')
-        )
--}

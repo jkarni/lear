@@ -19,6 +19,7 @@ dependencies:
 - distributive
 - recursion-schemes
 - vector-space
+- ghc-prim
 - lens
 - mtl
 - ghc-typelits-natnormalise
@@ -47,6 +48,7 @@ tests:
 default-extensions:
 - ConstraintKinds
 - DataKinds
+- DefaultSignatures
 - DeriveFunctor
 - DeriveGeneric
 - DeriveTraversable
@@ -56,13 +58,12 @@ default-extensions:
 - FunctionalDependencies
 - GADTs
 - MultiParamTypeClasses
+- PolyKinds
 - QuantifiedConstraints
 - RankNTypes
 - ScopedTypeVariables
 - StandaloneDeriving
 - TupleSections
+- TypeApplications
 - TypeFamilies
 - TypeOperators
-- DefaultSignatures
-- TypeApplications
-- PolyKinds

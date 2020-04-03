@@ -6,18 +6,22 @@ import Control.Lens
 import Data.Bifunctor
 import Data.Generics.Product
 import Data.Monoid
+import GHC.Types
 import Lear.Internal.Type
 
-{-
-liftLens :: Lens' (p, a) b -> Lear p a b
-liftLens l = Lear $ \p a -> ((p, a) ^. l, \b' -> first const $ (p, a) & l .~ b')
+liftLens' :: Lens' (p, a) b -> Lear p a b
+liftLens' l = Lear $ \p a -> ((p, a) ^. l, \b' -> bimap (Endo . const) (Endo . const) $ (p, a) & l .~ b')
 
-liftLens' :: Lens' a b -> Lear p a b
-liftLens' l = liftLens (_2 . l)
+liftLens :: Lens' a b -> Lear p a b
+liftLens l = liftLens' (_2 . l)
 
 -- | A lifted version of `the`.
-look :: forall (sel :: k) a b p. HasAny sel a a b b => Lear p a b
-look = liftLens' (the @sel)
+look :: forall (sel :: Symbol) a b p. HasField sel a a b b => Lear p a b
+look = liftLens (field @sel)
+
+{-
+
+
 
 -- | Take a param using a lens.
 withParam :: Lear p a b -> Lens' p' p -> Lear p' a b

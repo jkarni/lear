@@ -19,8 +19,11 @@ runLear l p a = fst (backprop l p a)
 learnOne :: Lear p a b -> p -> a -> b -> (p, a)
 learnOne l p a = snd (backprop l p a)
 
-grad :: Lear p a b -> p -> a -> b -> (p, a)
-grad l p a = snd (backprop l p a)
+(<?) :: Lear p a b -> b -> (p, a) -> p
+(<?) l b (p, a) = fst $ learnOne l p a b
+
+(?>) :: (p, a) -> Lear p a b -> b
+(p, a) ?> l = runLear l p a
 
 -- | Make a learner never learn.
 --

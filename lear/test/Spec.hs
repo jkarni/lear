@@ -1,9 +1,11 @@
 module Main where
 
 import Control.Category
+import Control.Lens.TH
 import Data.Bifunctor
 import Data.Functor.Foldable
 import Data.VectorSpace
+import GHC.Generics (Generic)
 import GHC.Stack
 import qualified Hedgehog as H
 import qualified Hedgehog.Gen as H
@@ -13,6 +15,13 @@ import Numeric.Backprop
 import Test.Hspec
 import Test.Hspec.Hedgehog
 import Prelude hiding ((.))
+
+data Linear
+  = Linear
+      { weight :: Float,
+        bias :: Float
+      }
+  deriving (Eq, Show, Generic)
 
 main :: IO ()
 main =
@@ -24,9 +33,11 @@ main =
 
 runLearSpec :: Spec
 runLearSpec =
-  describe "runLear"
-    $ it "should be the original function"
-    $ runLear linear 5 3 `shouldBe` 15
+  describe "runLear" $ do
+    it "should be the original function" $ runLear linear 5 3 `shouldBe` 15
+    it "work for lens composition" $ do
+      let l = Linear {weight = 5, bias = 7}
+      runLear linear' l 3 `shouldBe` 22
 
 learnOneSpec :: Spec
 learnOneSpec =
@@ -42,20 +53,14 @@ learnOneSpec =
       let (x', y') = learnOne linear x y z
       x' * y ~=~ z
       x * y' ~=~ z
-
-{-
-
-atRateSpec :: Spec
-atRateSpec =
-  describe "atRate" $ do
-    prop "doesn't change things if set to one" $ \(x, y, z) ->
-      (x /= 0) ==> learnOne linear x y z == learnOne (linear `atRate` 1) x y z
-    prop "is the inverse of multiplying the error" $ \(x, y, z) ->
-      (x /= 0)
-        ==> let res = x * y
-             in learnOne linear x y (res + z) ~~ learnOne (linear `atRate` 0.1) x y (res + z / 0.1)
-
--}
+    it "gets closer if it can't learn in one" $ hedgehog $ do
+      w <- H.forAll $ H.float (HR.constant (-100) 100)
+      b <- H.forAll $ H.float (HR.constant (-100) 100)
+      x <- H.forAll $ H.float (HR.constant (-100) 100)
+      y <- H.forAll $ H.float (HR.constant (-100) 100)
+      let l = Linear {weight = w, bias = b}
+      let l' = (l, x) & linear' <? y
+      (l', x) ?> linear' ~=~ y
 
 -- * Helpers
 
@@ -64,6 +69,9 @@ atRateSpec =
 -- This is solvable from one datapoint, which makes testing easier.
 linear :: Lear Float Float Float
 linear = param * input
+
+linear' :: Lear Linear Float Float
+linear' = (look @"weight") . param * input + (look @"bias") . param
 
 -- ** Approximate Equality
 
@@ -83,20 +91,3 @@ instance ApproximateEq Float
 
 instance (ApproximateEq a, ApproximateEq b) => ApproximateEq (a, b) where
   (a0, a1) ~~ (b0, b1) = a0 ~~ b0 && a1 ~~ b1
-{-
-adjunctSpec :: Spec
-adjunctSpec = describe "adjunct" $ do
--}
-
-{-
-cataLSpec :: Spec
-cataLSpec = describe "cataL"
-  $ it "combines impl correctly"
-  $ do
-    let i x = case x of
-          Nil -> 0
-          Cons a b -> a + b
-        l = Learn {impl = \(p, a) -> p * i a, upd = na, req = na}
-    forwards (cataL l) 0 [2, 3, 1] `shouldBe` 0
-    forwards (cataL l) 1 [2, 3, 1] `shouldBe` 6
--}
