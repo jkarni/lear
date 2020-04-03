@@ -60,7 +60,7 @@ con l r a =
   let (p0, b0) = l a
       (p, x) = sequence $ (first Endo <$> r) <$> b0
    in (p0 . appEndo p, x)
-
+{-
 data E p a = E (p -> p) !a
   deriving (Functor)
 
@@ -88,7 +88,7 @@ cataL (Lear f) = Lear $ \p t ->
       co :: (a -> (x -> x, Base t a)) -> a -> (x -> x, t)
       co f' x = unE $ ana (\(E _ a) -> let (p', b) = f' a in E p' <$> b) (E id x)
    in co <$> once
-{-
+
 anaL ::
   forall p t a.
   (Applicative (Base t), Corecursive t, Recursive t, Traversable (Base t)) =>
