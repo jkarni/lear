@@ -11,7 +11,7 @@ import Lear.Internal.Type
 backprop :: Lear p a b -> p -> a -> (b, b -> (p, a))
 backprop (Lear f) p a =
   let (b, lin) = f p a
-   in (b, first (($ p) . appEndo) . second (($ a) . appEndo) . lin)
+   in (b, bimap (($ p) . appEndo) (($ a) . appEndo) . lin)
 
 runLear :: Lear p a b -> p -> a -> b
 runLear l p a = fst (backprop l p a)
