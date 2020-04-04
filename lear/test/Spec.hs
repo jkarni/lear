@@ -43,21 +43,15 @@ learnOneSpec :: Spec
 learnOneSpec =
   describe "learnOne" $ do
     it "returns the input if correct" $ hedgehog $ do
-      x <- H.forAll $ H.float (HR.constant (-100) 100)
-      y <- H.forAll $ H.float (HR.constant (-100) 100)
+      (x, y) <- (,) <$> floatGen <*> floatGen
       learnOne linear x y (x * y) ~=~ (x, y)
     it "returns the two fixes if incorrect" $ hedgehog $ do
-      x <- H.forAll $ H.float (HR.constant (-100) 100)
-      y <- H.forAll $ H.float (HR.constant (-100) 100)
-      z <- H.forAll $ H.float (HR.constant (-100) 100)
+      (x, y, z) <- (,,) <$> floatGen <*> floatGen <*> floatGen
       let (x', y') = learnOne linear x y z
       x' * y ~=~ z
       x * y' ~=~ z
     it "gets closer if it can't learn in one" $ hedgehog $ do
-      w <- H.forAll $ H.float (HR.constant (-100) 100)
-      b <- H.forAll $ H.float (HR.constant (-100) 100)
-      x <- H.forAll $ H.float (HR.constant (-100) 100)
-      y <- H.forAll $ H.float (HR.constant (-100) 100)
+      (w, b, x, y) <- (,,,) <$> floatGen <*> floatGen <*> floatGen <*> floatGen
       let l = Linear {weight = w, bias = b}
       let l' = (l, x) & linear' <? y
       (l', x) ?> linear' ~=~ y
@@ -72,6 +66,11 @@ linear = param * input
 
 linear' :: Lear Linear Float Float
 linear' = (look @"weight") . param * input + (look @"bias") . param
+
+-- * Generators
+
+floatGen :: (HasCallStack, Monad m) => PropertyT m Float
+floatGen = H.forAll $ H.float (HR.constant (-100) 100)
 
 -- ** Approximate Equality
 
