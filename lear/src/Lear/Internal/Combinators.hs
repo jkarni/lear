@@ -25,6 +25,14 @@ learnOne l p a = snd (backprop l p a)
 (?>) :: (p, a) -> Lear p a b -> b
 (p, a) ?> l = runLear l p a
 
+-- | Return the parameter.
+param :: Lear p a p
+param = Lear $ \p a -> (p, \p' -> (Endo $ const p', mempty))
+
+-- | Return the input.
+input :: Lear p a a
+input = Lear $ \p a -> (a, \a' -> (mempty, Endo $ const a'))
+
 -- | Make a learner never learn.
 --
 -- Instead, it always sends as update whatever it received, and always asks for

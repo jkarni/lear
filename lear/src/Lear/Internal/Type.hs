@@ -6,7 +6,7 @@ import Data.Coerce
 import Data.Foldable (fold)
 import Data.Functor.Rep
 import Data.Group
-import qualified Data.Map as Map
+import qualified Data.Map.Strict as Map
 import Data.Monoid
 import Data.VectorSpace
   ( AdditiveGroup (..),
@@ -17,9 +17,27 @@ import GHC.Generics (Generic)
 
 newtype Lear p a b
   = Lear
-      { getLear :: p -> a -> (b, b -> (Endo p, Endo a))
+      { getLear :: p -> a -> (b, b -> (FVec p, FVec a))
       }
   deriving (Generic)
+
+newtype FVec a = FVec {getFVec :: Map.Map a Float}
+  deriving (Eq, Show, Generic)
+
+instance Ord a => Semigroup (FVec a) where
+  (<>) = (^+^)
+
+instance Ord a => Monoid (FVec a) where
+  mempty = zeroV
+
+instance Ord a => AdditiveGroup (FVec a) where
+  zeroV = FVec mempty
+  FVec l ^+^ FVec r = FVec $ Map.unionWith (+) l r
+  negateV (FVec v) = FVec $ negate <$> v
+
+instance Ord a => VectorSpace (FVec a) where
+  type Scalar (FVec a) = Float
+  s *^ FVec v = FVec $ (s *) <$> v
 
 (&&&) :: Lear p a b0 -> Lear p a b1 -> Lear p a (b0, b1)
 Lear x &&& Lear y = Lear $ \p a ->
@@ -27,10 +45,12 @@ Lear x &&& Lear y = Lear $ \p a ->
       (b1, liny) = y p a
    in ((b0, b1), \(b0', b1') -> linx b0' <> liny b1')
 
+{-
 foldG :: (Group a, Functor f, Foldable f) => Lear p (f a) a
 foldG = Lear $ \p fa ->
   let res = fold fa
    in (res, \a -> (mempty, Endo $ \fa' -> (\a' -> a' <> (a <-> res)) <$> fa'))
+-}
 
 fanOut :: (Representable f) => Lear p a (f a)
 fanOut = Lear $ \_ a -> (tabulate (const a), const mempty)
@@ -53,7 +73,7 @@ conc =
 (<->) :: Group a => a -> a -> a
 a <-> b = a <> invert b
 
-instance (Fractional b) => Num (Lear p a b) where
+instance (Ord p, Fractional b) => Num (Lear p a b) where
   fromInteger x = Lear $ \p a -> (fromInteger x, const mempty)
   negate x = x - 2 * x
   a + b = coerce $ conc C.. (coerce $ a &&& b :: Lear p a (Sum b, Sum b))

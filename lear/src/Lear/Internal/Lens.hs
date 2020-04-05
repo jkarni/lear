@@ -18,7 +18,6 @@ liftLens l = liftLens' (_2 . l)
 -- | A lifted version of `the`.
 look :: forall (sel :: Symbol) a b p. HasField sel a a b b => Lear p a b
 look = liftLens (field @sel)
-
 {-
 
 
@@ -33,9 +32,3 @@ withParam (Lear f) ls = Lear $ \p a ->
            in ((& ls %~ fp), a)
       )
 -}
-
-param :: Lear p a p
-param = Lear $ \p a -> (p, \p' -> (Endo $ const p', mempty))
-
-input :: Lear p a a
-input = Lear $ \p a -> (a, \a' -> (mempty, Endo $ const a'))
