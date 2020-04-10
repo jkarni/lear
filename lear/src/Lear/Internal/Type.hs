@@ -14,6 +14,7 @@ import Data.VectorSpace
   )
 import Debug.Trace
 import GHC.Generics (Generic)
+import Lear.Internal.LinearMap
 
 newtype Lear p a b
   = Lear
@@ -43,6 +44,9 @@ manyOf (Lear f) = Lear $ \fp fa ->
       frs = snd <$> fs
    in (fbs, _)
 -}
+
+linearMap :: LinearMap lm => lm (p, a) b -> Lear p a b
+linearMap f = Lear $ \p a -> (applyLinearMap f (p, a), _)
 
 conc :: (Group a) => Lear p (a, a) a
 conc =

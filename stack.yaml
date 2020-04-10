@@ -5,6 +5,12 @@ packages:
 
 nix:
     enable: true
+    packages:
+      - "zlib"
+      - "blas"
+      - "liblapack"
+      - "gfortran"
+      - gfortran.cc.lib
 
 extra-deps:
 - hspec-hedgehog-0.0.1.1@sha256:bbf992090eb2e3c1b8919150756bb4dc88c8c987992ee6f49ca9d3ec8cbddc96,1371

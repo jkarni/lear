@@ -20,6 +20,7 @@ dependencies:
 - recursion-schemes
 - vector-space
 - ghc-prim
+- hmatrix
 - lens
 - mtl
 - ghc-typelits-natnormalise

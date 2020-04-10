@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 8cf827aeac9e76b0852dc6df017e1847b112d9cb5c528b3fc1ff91fd1bb6dac1
+-- hash: c03347618673d4a4951b65ddc2767672b840757424d55fbf198f778b2d9a24bb
 
 name:           lear
 version:        0.1.0.0
@@ -31,6 +31,7 @@ library
       Lear.Internal.Adjoint
       Lear.Internal.Combinators
       Lear.Internal.Lens
+      Lear.Internal.LinearMap
       Lear.Internal.Spans
       Lear.Internal.Type
   other-modules:
@@ -47,6 +48,7 @@ library
     , ghc-prim
     , ghc-typelits-natnormalise
     , groups
+    , hmatrix
     , lens
     , mtl
     , recursion-schemes
@@ -74,6 +76,7 @@ test-suite lear-test
     , ghc-typelits-natnormalise
     , groups
     , hedgehog >=1.0.2
+    , hmatrix
     , hspec
     , hspec-hedgehog
     , lear

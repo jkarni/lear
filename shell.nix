@@ -9,5 +9,7 @@ stdenv.mkDerivation {
     ghc
     stack
     zlib
+    blas
+    gfortran
 ];
 }
