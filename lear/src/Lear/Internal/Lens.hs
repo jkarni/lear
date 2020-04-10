@@ -1,4 +1,5 @@
 {-# LANGUAGE AllowAmbiguousTypes #-}
+{-# LANGUAGE UndecidableInstances #-}
 
 module Lear.Internal.Lens where
 
@@ -6,6 +7,7 @@ import Control.Lens
 import Data.Bifunctor
 import Data.Generics.Product
 import Data.Monoid
+import GHC.OverloadedLabels
 import GHC.Types
 import Lear.Internal.Type
 
@@ -18,6 +20,9 @@ liftLens l = liftLens' (_2 . l)
 -- | A lifted version of `the`.
 look :: forall (sel :: Symbol) a b p. HasField sel a a b b => Lear p a b
 look = liftLens (field @sel)
+
+instance HasField name a a b b => IsLabel name (Lear p a b) where
+  fromLabel = liftLens (field @name)
 
 {-
 

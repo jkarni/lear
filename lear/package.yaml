@@ -58,6 +58,7 @@ default-extensions:
 - FunctionalDependencies
 - GADTs
 - MultiParamTypeClasses
+- OverloadedLabels
 - PolyKinds
 - QuantifiedConstraints
 - RankNTypes

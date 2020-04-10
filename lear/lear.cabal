@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 12d9a156d021950aad7f314440b1b03dd30263f696d0e050caa5b39bb923acc2
+-- hash: 8cf827aeac9e76b0852dc6df017e1847b112d9cb5c528b3fc1ff91fd1bb6dac1
 
 name:           lear
 version:        0.1.0.0
@@ -37,7 +37,7 @@ library
       Paths_lear
   hs-source-dirs:
       src
-  default-extensions: ConstraintKinds DataKinds DefaultSignatures DeriveFunctor DeriveGeneric DeriveTraversable ExistentialQuantification FlexibleContexts FlexibleInstances FunctionalDependencies GADTs MultiParamTypeClasses PolyKinds QuantifiedConstraints RankNTypes ScopedTypeVariables StandaloneDeriving TupleSections TypeApplications TypeFamilies TypeOperators
+  default-extensions: ConstraintKinds DataKinds DefaultSignatures DeriveFunctor DeriveGeneric DeriveTraversable ExistentialQuantification FlexibleContexts FlexibleInstances FunctionalDependencies GADTs MultiParamTypeClasses OverloadedLabels PolyKinds QuantifiedConstraints RankNTypes ScopedTypeVariables StandaloneDeriving TupleSections TypeApplications TypeFamilies TypeOperators
   build-depends:
       adjunctions
     , base >=4.7 && <5
@@ -60,7 +60,7 @@ test-suite lear-test
       Paths_lear
   hs-source-dirs:
       test
-  default-extensions: ConstraintKinds DataKinds DefaultSignatures DeriveFunctor DeriveGeneric DeriveTraversable ExistentialQuantification FlexibleContexts FlexibleInstances FunctionalDependencies GADTs MultiParamTypeClasses PolyKinds QuantifiedConstraints RankNTypes ScopedTypeVariables StandaloneDeriving TupleSections TypeApplications TypeFamilies TypeOperators
+  default-extensions: ConstraintKinds DataKinds DefaultSignatures DeriveFunctor DeriveGeneric DeriveTraversable ExistentialQuantification FlexibleContexts FlexibleInstances FunctionalDependencies GADTs MultiParamTypeClasses OverloadedLabels PolyKinds QuantifiedConstraints RankNTypes ScopedTypeVariables StandaloneDeriving TupleSections TypeApplications TypeFamilies TypeOperators
   ghc-options: -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       QuickCheck

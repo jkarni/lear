@@ -65,7 +65,7 @@ linear :: Lear Float Float Float
 linear = param * input
 
 linear' :: Lear Linear Float Float
-linear' = (look @"weight") . param * input + (look @"bias") . param
+linear' = #weight . param * input + #bias . param
 
 -- * Generators
 
