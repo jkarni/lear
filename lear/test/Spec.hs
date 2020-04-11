@@ -12,6 +12,7 @@ import qualified Hedgehog.Gen as H
 import qualified Hedgehog.Range as HR
 import Lear
 import Numeric.Backprop
+import Numeric.OneLiner
 import Test.Hspec
 import Test.Hspec.Hedgehog
 import Prelude hiding ((.))
@@ -21,7 +22,8 @@ data Linear
       { weight :: Float,
         bias :: Float
       }
-  deriving (Eq, Show, Generic)
+  deriving stock (Eq, Show, Generic)
+  deriving (Num) via (GNum Linear)
 
 main :: IO ()
 main =
@@ -34,7 +36,9 @@ main =
 runLearSpec :: Spec
 runLearSpec =
   describe "runLear" $ do
-    it "should be the original function" $ runLear linear 5 3 `shouldBe` 15
+    it "should be the original function" $ do
+      let l = Linear {weight = 5, bias = 7}
+      runLear linear l 3 `shouldBe` 15
     it "work for lens composition" $ do
       let l = Linear {weight = 5, bias = 7}
       runLear linear' l 3 `shouldBe` 22
@@ -42,30 +46,39 @@ runLearSpec =
 learnOneSpec :: Spec
 learnOneSpec =
   describe "learnOne" $ do
-    it "returns the input if correct" $ hedgehog $ do
-      (x, y) <- (,) <$> floatGen <*> floatGen
-      learnOne linear x y (x * y) ~=~ (x, y)
-    it "returns the two fixes if incorrect" $ hedgehog $ do
-      (x, y, z) <- (,,) <$> floatGen <*> floatGen <*> floatGen
-      let (x', y') = learnOne linear x y z
-      x' * y ~=~ z
-      x * y' ~=~ z
-    it "gets closer if it can't learn in one" $ hedgehog $ do
-      (w, b, x, y) <- (,,,) <$> floatGen <*> floatGen <*> floatGen <*> floatGen
-      let l = Linear {weight = w, bias = b}
-      let l' = (l, x) & linear' <? y
-      (l', x) ?> linear' ~=~ y
+    context "linear" $ testLear linear
+    context "linear'" $ testLear linear'
+    context "linearSub" $ testLear linearSub
+  where
+    testLear lear = do
+      it "returns the input if correct" $ hedgehog $ do
+        (w, b, x) <- (,,) <$> floatGen <*> floatGen <*> floatGen
+        let l = Linear {weight = w, bias = b}
+        learnOne lear l x (runLear lear l x) ~=~ (l, x)
+      it "returns the fixed param if incorrect" $ hedgehog $ do
+        (w, b, x, y) <- (,,,) <$> floatGen <*> floatGen <*> floatGen <*> floatGen
+        let l = Linear {weight = w, bias = b}
+        let (l', _) = learnOne lear l x y
+        runLear lear l' x ~=~ y
+      it "returns the fixed input if incorrect" $ hedgehog $ do
+        (w, b, x, y) <- (,,,) <$> floatGen <*> floatGen <*> floatGen <*> floatGen
+        let l = Linear {weight = w, bias = b}
+        let (_, x') = learnOne lear l x y
+        runLear lear l x' ~=~ y
 
 -- * Helpers
 
 -- | A linear function passing through the origin without noise.
 --
 -- This is solvable from one datapoint, which makes testing easier.
-linear :: Lear Float Float Float
-linear = param * input
+linear :: Lear Linear Float Float
+linear = #weight . param * input
 
 linear' :: Lear Linear Float Float
 linear' = #weight . param * input + #bias . param
+
+linearSub :: Lear Linear Float Float
+linearSub = #weight . param - input
 
 -- * Generators
 
@@ -84,9 +97,12 @@ infix 4 ~~
 class ApproximateEq a where
   (~~) :: a -> a -> Bool
   default (~~) :: (Ord a, Fractional a) => a -> a -> Bool
-  a ~~ b = abs (a - b) < 0.1
+  a ~~ b = 0.1 > (abs (a - b) / (a + b))
 
 instance ApproximateEq Float
 
 instance (ApproximateEq a, ApproximateEq b) => ApproximateEq (a, b) where
   (a0, a1) ~~ (b0, b1) = a0 ~~ b0 && a1 ~~ b1
+
+instance ApproximateEq Linear where
+  Linear a0 a1 ~~ Linear b0 b1 = a0 ~~ b0 && a1 ~~ b1

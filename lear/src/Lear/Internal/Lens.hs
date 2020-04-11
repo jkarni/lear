@@ -23,7 +23,6 @@ look = liftLens (field @sel)
 
 instance HasField name a a b b => IsLabel name (Lear p a b) where
   fromLabel = liftLens (field @name)
-
 {-
 
 
@@ -38,9 +37,3 @@ withParam (Lear f) ls = Lear $ \p a ->
            in ((& ls %~ fp), a)
       )
 -}
-
-param :: Lear p a p
-param = Lear $ \p a -> (p, \p' -> (Endo $ const p', mempty))
-
-input :: Lear p a a
-input = Lear $ \p a -> (a, \a' -> (mempty, Endo $ const a'))

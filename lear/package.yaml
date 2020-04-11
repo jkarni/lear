@@ -44,6 +44,7 @@ tests:
     - hspec-hedgehog
     - hedgehog >= 1.0.2
     - QuickCheck
+    - one-liner-instances
 
 default-extensions:
 - ConstraintKinds
@@ -52,6 +53,7 @@ default-extensions:
 - DeriveFunctor
 - DeriveGeneric
 - DeriveTraversable
+- DerivingVia
 - ExistentialQuantification
 - FlexibleContexts
 - FlexibleInstances
