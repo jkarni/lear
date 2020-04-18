@@ -2,6 +2,7 @@
 
 module Lear.Internal.Adjoint where
 
+{-
 import Control.Monad
 import Data.Bifunctor (first)
 import Data.Functor.Adjunction
@@ -95,4 +96,5 @@ anaL ::
   Lear p a (Base t a) ->
   Lear p a t
 anaL (Lear f) = Lear $ \p t -> _
+-}
 -}

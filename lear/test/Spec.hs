@@ -25,60 +25,50 @@ data Linear
   deriving stock (Eq, Show, Generic)
   deriving (Num) via (GNum Linear)
 
+instance AdditiveGroup Linear
+
+instance VectorSpace Linear
+
 main :: IO ()
 main =
   hspec $ do
-    runLearSpec
-    learnOneSpec
+    basicSpec
 
 -- atRateSpec
 
-runLearSpec :: Spec
-runLearSpec =
-  describe "runLear" $ do
-    it "should be the original function" $ do
-      let l = Linear {weight = 5, bias = 7}
-      runLear linear l 3 `shouldBe` 15
-    it "work for lens composition" $ do
-      let l = Linear {weight = 5, bias = 7}
-      runLear linear' l 3 `shouldBe` 22
-
-learnOneSpec :: Spec
-learnOneSpec =
-  describe "learnOne" $ do
-    context "linear" $ testLear linear
-    context "linear'" $ testLear linear'
-    context "linearSub" $ testLear linearSub
+basicSpec :: Spec
+basicSpec =
+  describe "For " $ do
+    context "multiplication" $ testLear timesLin
+    context "multiplication and addition '" $ testLear timesPlusLin
+    context "subtraction" $ testLear minusLin
   where
     testLear lear = do
       it "returns the input if correct" $ hedgehog $ do
         (w, b, x) <- (,,) <$> floatGen <*> floatGen <*> floatGen
         let l = Linear {weight = w, bias = b}
-        learnOne lear l x (runLear lear l x) ~=~ (l, x)
+        learnOne lear l x (evalLear lear l x) ~=~ (l, x)
       it "returns the fixed param if incorrect" $ hedgehog $ do
         (w, b, x, y) <- (,,,) <$> floatGen <*> floatGen <*> floatGen <*> floatGen
         let l = Linear {weight = w, bias = b}
         let (l', _) = learnOne lear l x y
-        runLear lear l' x ~=~ y
+        evalLear lear l' x ~=~ y
       it "returns the fixed input if incorrect" $ hedgehog $ do
         (w, b, x, y) <- (,,,) <$> floatGen <*> floatGen <*> floatGen <*> floatGen
         let l = Linear {weight = w, bias = b}
         let (_, x') = learnOne lear l x y
-        runLear lear l x' ~=~ y
+        evalLear lear l x' ~=~ y
 
 -- * Helpers
 
--- | A linear function passing through the origin without noise.
---
--- This is solvable from one datapoint, which makes testing easier.
-linear :: Lear Linear Float Float
-linear = #weight . param * input
+timesLin :: Lear Linear Float Float
+timesLin = #weight . param * input
 
-linear' :: Lear Linear Float Float
-linear' = #weight . param * input + #bias . param
+timesPlusLin :: Lear Linear Float Float
+timesPlusLin = #weight . param * input + #bias . param
 
-linearSub :: Lear Linear Float Float
-linearSub = #weight . param - input
+minusLin :: Lear Linear Float Float
+minusLin = #weight . param - input
 
 -- * Generators
 

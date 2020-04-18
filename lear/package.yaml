@@ -12,12 +12,19 @@ extra-source-files:
 
 description:         Please see the README on GitHub at <https://github.com/githubuser/lear#readme>
 
+ghc-options:
+- -Wall
+
 dependencies:
 - base >= 4.7 && < 5
+- comonad
 - adjunctions
 - containers
 - distributive
+- mmorph
+- update-monad
 - recursion-schemes
+- monoid-extras
 - vector-space
 - ghc-prim
 - lens
@@ -59,6 +66,7 @@ default-extensions:
 - FlexibleInstances
 - FunctionalDependencies
 - GADTs
+- GeneralizedNewtypeDeriving
 - MultiParamTypeClasses
 - OverloadedLabels
 - PolyKinds

@@ -8,23 +8,6 @@ import Data.VectorSpace
   )
 import Lear.Internal.Type
 
-backprop :: Lear p a b -> p -> a -> (b, b -> (p, a))
-backprop (Lear f) p a =
-  let (b, lin) = f p a
-   in (b, bimap (($ p) . appEndo) (($ a) . appEndo) . lin)
-
-runLear :: Lear p a b -> p -> a -> b
-runLear l p a = fst (backprop l p a)
-
-learnOne :: Lear p a b -> p -> a -> b -> (p, a)
-learnOne l p a = snd (backprop l p a)
-
-(<?) :: Lear p a b -> b -> (p, a) -> p
-(<?) l b (p, a) = fst $ learnOne l p a b
-
-(?>) :: (p, a) -> Lear p a b -> b
-(p, a) ?> l = runLear l p a
-
 -- | Make a learner never learn.
 --
 -- Instead, it always sends as update whatever it received, and always asks for

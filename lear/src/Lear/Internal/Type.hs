@@ -1,125 +1,98 @@
 module Lear.Internal.Type where
 
-import Control.Applicative
+import Control.Arrow
 import Control.Category
-import Data.Bifunctor (bimap)
-import Data.Coerce
-import Data.Foldable (fold)
-import Data.Functor.Rep
-import Data.Group
-import qualified Data.Map as Map
-import Data.Monoid
+import qualified Data.Bifunctor as Bif
+import Data.Monoid.Action
 import Data.Tuple (swap)
-import Data.VectorSpace
-  ( AdditiveGroup (..),
-    VectorSpace (..),
-  )
-import Debug.Trace
 import GHC.Generics (Generic)
+import Lear.Internal.Diff
 import Prelude hiding ((.), id)
 
-newtype Lear p a b
-  = Lear
-      { getLear :: p -> a -> (b, b -> (Endo p, Endo a))
-      }
+-- |
+-- There's a nice symmetry here, with params showing up once in positive
+-- and once in negative position, once with Diff
+--
+-- Equivalent to UpdateT of Coupdate over diffs. Or, approximately, State of
+-- Store.
+newtype Lear p a b = Lear {runLear :: p -> a -> (b, Diff b -> (Diff a, Diff p))}
   deriving (Generic)
 
-firstL :: Lear p a b -> Lear p (a, d) (b, d)
-firstL l = l <***> id
+evalLear :: Lear p a b -> p -> a -> b
+evalLear l p a = fst $ runLear l p a
 
-secondL :: Lear p a b -> Lear p (d, a) (d, b)
-secondL l = id <***> l
+backLear :: (FloatVector a, FloatVector p) => Lear p a b -> p -> a -> b -> (a, p)
+backLear l p a b =
+  let (b', df) = runLear l p a
+      action = df $ subtrAct b b'
+   in act action (a, p)
 
-infixr 3 <***>
-
-(<***>) :: Lear p a0 b0 -> Lear p a1 b1 -> Lear p (a0, a1) (b0, b1)
-Lear x <***> Lear y = Lear $ \p (a0, a1) ->
-  let (b0, linx) = x p a0
-      (b1, liny) = y p a1
-   in ( (b0, b1),
-        \(b0', b1') ->
-          let (ep0, Endo ea0) = linx b0'
-              (ep1, Endo ea1) = liny b1'
-           in (ep0 <> ep1, Endo $ bimap ea0 ea1)
-      )
-
-infixr 3 <&&&>
-
-(<&&&>) :: Lear p a b0 -> Lear p a b1 -> Lear p a (b0, b1)
-Lear x <&&&> Lear y = Lear $ \p a ->
-  let (b0, linx) = x p a
-      (b1, liny) = y p a
-   in ((b0, b1), \(b0', b1') -> linx b0' <> liny b1')
-
-fstL :: Lear p (a, b) a
-fstL = Lear $ \p (a, b) -> (a, \a' -> (mempty, Endo $ \(_, b') -> (a', b')))
-
-sndL :: Lear p (a, b) b
-sndL = Lear $ \p (a, b) -> (b, \b' -> (mempty, Endo $ \(a', _) -> (a', b')))
-
-param :: Lear p a p
-param = Lear $ \p a -> (p, \p' -> (Endo $ const p', mempty))
-
-input :: Lear p a a
-input = Lear $ \p a -> (a, \a' -> (mempty, Endo $ const a'))
-
-flipL :: Lear p a b -> Lear a p b
-flipL (Lear f) = Lear $ \a p ->
-  let (b, linx) = f p a
-   in (b, swap <$> linx)
-
-onParam :: Lear a p p -> Lear p a a
-onParam l = sndL . (flipL l <&&&> id)
-
-foldG :: (Group a, Functor f, Foldable f) => Lear p (f a) a
-foldG = Lear $ \p fa ->
-  let res = fold fa
-   in (res, \a -> (mempty, Endo $ \fa' -> (\a' -> a' <> (a <-> res)) <$> fa'))
-
-fanOut :: (Representable f) => Lear p a (f a)
-fanOut = Lear $ \_ a -> (tabulate (const a), const mempty)
-
-{-
-manyOf :: (Applicative f, Traversable f, Foldable f) => Lear p a b -> Lear (f p) (f a) (f b)
-manyOf (Lear f) = Lear $ \fp fa ->
-  let fs = f <$> fp <*> fa
-      fbs = fst <$> fs
-      frs = snd <$> fs
-   in (fbs, _)
--}
-
-conc :: (Group a) => Lear p (a, a) a
-conc =
-  Lear $ \p (a0, a1) ->
-    let res = a0 <> a1
-     in (res, \a -> (mempty, Endo $ \(a0', a1') -> (a0 <> (a <-> res), a1 <> (a <-> res))))
-
-inverse :: (Group p, Group a) => Lear p a a
-inverse = Lear $ \p a ->
-  ( invert a,
-    -- The const here is wrong, since it ignores sideways changes. Which in
-    -- turn means endo is going to be wrong...
-    \a' -> (mempty, Endo $ const $ invert a')
-  )
-
-(<->) :: Group a => a -> a -> a
-a <-> b = a <> invert b
-
-instance (Num p, Fractional b) => Num (Lear p a b) where
-  fromInteger x = Lear $ \p a -> (fromInteger x, const mempty)
-  a + b = coerce $ conc . (coerce $ a <&&&> b :: Lear p a (Sum b, Sum b))
-  a * b = coerce $ conc . (coerce $ a <&&&> b :: Lear p a (Product b, Product b))
-  a - b = coerce $ conc . (onParam inverse . (coerce $ a <&&&> b :: Lear (Sum p) a (Sum b, Sum b)))
+learnOne :: (FloatVector a, FloatVector p) => Lear p a b -> p -> a -> b -> (p, a)
+learnOne l p a b = swap $ backLear l p a b
 
 instance Category (Lear p) where
-  id = Lear $ \_ a -> (a, const mempty)
-
+  id = Lear $ \_ a -> (a, (,mempty))
   Lear g . Lear f = Lear $ \p a ->
-    let (b, f') = f p a
-        (c, g') = g p b
-     in ( c,
-          \c' ->
-            let (pg, b') = g' c'
-                (pf, a') = f' (appEndo b' b)
-             in (pf <> pg, a')
+    let (b, db) = f p a
+        (c, dc) = g p b
+     in (c, db `compDiff` dc)
+
+instance Arrow (Lear p) where
+  arr = error "Never going to happen"
+  f &&& g = let Lear h = f *** g in Lear $ \p -> fmap (Bif.first undupDiff) <$$> h p . dup
+    where
+      dup a = (a, a)
+  Lear f *** Lear g = Lear $ \p (b, b') ->
+    let (c, dc) = f p b
+        (c', dc') = g p b'
+     in ( (c, c'),
+          \dcc ->
+            let (dl, dr) = splitDiff dcc
+                (dbl, dpl) = dc dl
+                (dbr, dpr) = dc' dr
+             in (joinDiff (dbl, dbr), dpl <> dpr)
         )
+
+instance (Action da sa, Action db sb) => Action (da, db) (sa, sb) where
+  act (da, db) (sa, sb) = (act da sa, act db sb)
+
+class (Monoid d) => SubtrAction d s where
+  subtrAct :: s -> s -> d
+
+instance SubtrAction (Diff p) p where
+  subtrAct a b = Diff [(a, 1), (b, -1)]
+
+instance Fractional b => Num (Lear p a b) where
+  a + b = plusL . (a &&& b)
+  a - b = minusL . (a &&& b)
+  a * b = timesL . (a &&& b)
+
+-- * Basic Lears
+
+param :: Lear p a p
+param = Lear $ \p _ -> (p, (mempty,))
+
+input :: Lear p a a
+input = id
+
+-- * Helpers
+
+plusL :: Num a => Lear p (a, a) a
+plusL = Lear $ \p (a, a') -> (a + a', \da -> (dup <$> scaleDiff 0.5 da, mempty))
+  where
+    dup a = (a, a)
+
+minusL :: Num a => Lear p (a, a) a
+minusL = Lear $ \p (a, a') -> (a - a', \da -> (dup <$> scaleDiff 0.5 da, mempty))
+  where
+    dup a = (a, - a)
+
+timesL :: Fractional a => Lear p (a, a) a
+timesL = Lear $ \p (a, a') -> (a * a', \da -> (dup <$> da, mempty))
+  where
+    dup a = (a, a)
+
+infixl 4 <$$>
+
+(<$$>) :: (Functor f, Functor f') => (a -> b) -> f (f' a) -> f (f' b)
+(<$$>) = fmap . fmap

@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: a710dde59605e7ba37b8750040c23fd25907e079c5c0fab25ebb4e578f2a14e6
+-- hash: 9facae7d78a360e2d6983c2360a6c9ba263e6dc9c5c3c4ea8bc30e0999ac97a3
 
 name:           lear
 version:        0.1.0.0
@@ -30,6 +30,7 @@ library
       Lear
       Lear.Internal.Adjoint
       Lear.Internal.Combinators
+      Lear.Internal.Diff
       Lear.Internal.Lens
       Lear.Internal.Spans
       Lear.Internal.Type
@@ -37,10 +38,12 @@ library
       Paths_lear
   hs-source-dirs:
       src
-  default-extensions: ConstraintKinds DataKinds DefaultSignatures DeriveFunctor DeriveGeneric DeriveTraversable DerivingVia ExistentialQuantification FlexibleContexts FlexibleInstances FunctionalDependencies GADTs MultiParamTypeClasses OverloadedLabels PolyKinds QuantifiedConstraints RankNTypes ScopedTypeVariables StandaloneDeriving TupleSections TypeApplications TypeFamilies TypeOperators
+  default-extensions: ConstraintKinds DataKinds DefaultSignatures DeriveFunctor DeriveGeneric DeriveTraversable DerivingVia ExistentialQuantification FlexibleContexts FlexibleInstances FunctionalDependencies GADTs GeneralizedNewtypeDeriving MultiParamTypeClasses OverloadedLabels PolyKinds QuantifiedConstraints RankNTypes ScopedTypeVariables StandaloneDeriving TupleSections TypeApplications TypeFamilies TypeOperators
+  ghc-options: -Wall
   build-depends:
       adjunctions
     , base >=4.7 && <5
+    , comonad
     , containers
     , distributive
     , generic-lens
@@ -48,8 +51,11 @@ library
     , ghc-typelits-natnormalise
     , groups
     , lens
+    , mmorph
+    , monoid-extras
     , mtl
     , recursion-schemes
+    , update-monad
     , vector-space
   default-language: Haskell2010
 
@@ -60,13 +66,14 @@ test-suite lear-test
       Paths_lear
   hs-source-dirs:
       test
-  default-extensions: ConstraintKinds DataKinds DefaultSignatures DeriveFunctor DeriveGeneric DeriveTraversable DerivingVia ExistentialQuantification FlexibleContexts FlexibleInstances FunctionalDependencies GADTs MultiParamTypeClasses OverloadedLabels PolyKinds QuantifiedConstraints RankNTypes ScopedTypeVariables StandaloneDeriving TupleSections TypeApplications TypeFamilies TypeOperators
-  ghc-options: -threaded -rtsopts -with-rtsopts=-N
+  default-extensions: ConstraintKinds DataKinds DefaultSignatures DeriveFunctor DeriveGeneric DeriveTraversable DerivingVia ExistentialQuantification FlexibleContexts FlexibleInstances FunctionalDependencies GADTs GeneralizedNewtypeDeriving MultiParamTypeClasses OverloadedLabels PolyKinds QuantifiedConstraints RankNTypes ScopedTypeVariables StandaloneDeriving TupleSections TypeApplications TypeFamilies TypeOperators
+  ghc-options: -Wall -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       QuickCheck
     , adjunctions
     , backprop
     , base >=4.7 && <5
+    , comonad
     , containers
     , distributive
     , generic-lens
@@ -78,8 +85,11 @@ test-suite lear-test
     , hspec-hedgehog
     , lear
     , lens
+    , mmorph
+    , monoid-extras
     , mtl
     , one-liner-instances
     , recursion-schemes
+    , update-monad
     , vector-space
   default-language: Haskell2010

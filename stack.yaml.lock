@@ -18,6 +18,13 @@ packages:
       sha256: 2129144cdfa14318a04c102eaf47ab751297ab62c1c97fa567e6abf21e4676e5
   original:
     hackage: hedgehog-1.0.2@sha256:bc80f8df76a122c6c5d0bbf66efd53cca1c29691a53110628894802ba3f207e2,4582
+- completed:
+    hackage: update-monad-0.1.0.0@sha256:4d98a6a2df7c53b309864dd0220ba34f7fc3ed76efbce59a584c784fae5bcd5b,1058
+    pantry-tree:
+      size: 475
+      sha256: eac703b07de14a46a6bdb07ea2ab7fbdc0a4690d2ccf7a7a5384b7885283ceaf
+  original:
+    hackage: update-monad-0.1.0.0@sha256:4d98a6a2df7c53b309864dd0220ba34f7fc3ed76efbce59a584c784fae5bcd5b,1058
 snapshots:
 - completed:
     size: 524799
