@@ -3,8 +3,11 @@ module Main where
 import Control.Category
 import Control.Lens.TH
 import Data.Bifunctor
+import Data.Coerce
 import Data.Functor.Foldable
-import Data.VectorSpace
+import Data.Group
+import Data.Monoid (Sum (..))
+import Data.VectorSpace ()
 import GHC.Generics (Generic)
 import GHC.Stack
 import qualified Hedgehog as H
@@ -48,8 +51,9 @@ learnOneSpec =
   describe "learnOne" $ do
     context "linear" $ testLear linear
     context "linear'" $ testLear linear'
-    context "linearSub" $ testLear linearSub
   where
+    -- context "linearSub" $ testLear linearSub
+
     testLear lear = do
       it "returns the input if correct" $ hedgehog $ do
         (w, b, x) <- (,,) <$> floatGen <*> floatGen <*> floatGen
@@ -79,6 +83,11 @@ linear' = #weight . param * input + #bias . param
 
 linearSub :: Lear Linear Float Float
 linearSub = #weight . param - input
+
+{-
+foldLinear :: Lear Linear [Float] (Float)
+foldLinear = linear . foldG
+-}
 
 -- * Generators
 

@@ -1,10 +1,10 @@
 cabal-version: 1.12
 
--- This file has been generated from package.yaml by hpack version 0.33.0.
+-- This file has been generated from package.yaml by hpack version 0.34.2.
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: a710dde59605e7ba37b8750040c23fd25907e079c5c0fab25ebb4e578f2a14e6
+-- hash: 87effd5039688ec7f2ea579c431a5fd9287bf507d744617f585ac785ab13c694
 
 name:           lear
 version:        0.1.0.0
@@ -49,6 +49,7 @@ library
     , groups
     , lens
     , mtl
+    , one-liner
     , recursion-schemes
     , vector-space
   default-language: Haskell2010
@@ -79,6 +80,7 @@ test-suite lear-test
     , lear
     , lens
     , mtl
+    , one-liner
     , one-liner-instances
     , recursion-schemes
     , vector-space

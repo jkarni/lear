@@ -17,6 +17,7 @@ dependencies:
 - adjunctions
 - containers
 - distributive
+- one-liner
 - recursion-schemes
 - vector-space
 - ghc-prim

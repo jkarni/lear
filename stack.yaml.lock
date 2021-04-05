@@ -3,24 +3,10 @@
 # For more information, please see the documentation at:
 #   https://docs.haskellstack.org/en/stable/lock_files
 
-packages:
-- completed:
-    hackage: hspec-hedgehog-0.0.1.1@sha256:bbf992090eb2e3c1b8919150756bb4dc88c8c987992ee6f49ca9d3ec8cbddc96,1371
-    pantry-tree:
-      size: 379
-      sha256: e3c8694eea1df1ad60a71be5153e828128c50f066429127811ecb404a9309598
-  original:
-    hackage: hspec-hedgehog-0.0.1.1@sha256:bbf992090eb2e3c1b8919150756bb4dc88c8c987992ee6f49ca9d3ec8cbddc96,1371
-- completed:
-    hackage: hedgehog-1.0.2@sha256:bc80f8df76a122c6c5d0bbf66efd53cca1c29691a53110628894802ba3f207e2,4582
-    pantry-tree:
-      size: 2549
-      sha256: 2129144cdfa14318a04c102eaf47ab751297ab62c1c97fa567e6abf21e4676e5
-  original:
-    hackage: hedgehog-1.0.2@sha256:bc80f8df76a122c6c5d0bbf66efd53cca1c29691a53110628894802ba3f207e2,4582
+packages: []
 snapshots:
 - completed:
-    size: 524799
-    url: https://raw.githubusercontent.com/commercialhaskell/stackage-snapshots/master/lts/14/17.yaml
-    sha256: 1d72b33c0fc048e23f4f18fd76a6ad79dd1d8a3c054644098a71a09855e40c7c
-  original: lts-14.17
+    size: 567037
+    url: https://raw.githubusercontent.com/commercialhaskell/stackage-snapshots/master/lts/17/9.yaml
+    sha256: d7d8d5106e53d1669964bd8bd2b0f88a5ad192d772f5376384b76738fd992311
+  original: lts-17.9

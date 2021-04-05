@@ -21,35 +21,35 @@ import Lear.Internal.Type
 
 -- $adjoinNote
 
-adjoin :: (Eq (l ()), Adjunction l r) => Lear p a b -> Lear (r p) (l a) b
+adjoin :: (Eq (l ()), Adjunction l r) => Lear a b -> Lear (r p) (l a) b
 adjoin (Lear f) = Lear $ \rp la ->
   let (b, f') = zapWithAdjunction f rp la
    in ( b,
         \b' ->
-          let (updP, Endo updA) = f' b'
-           in (tweakAdjAtPoint la updP, Endo (updA <$>))
+          let (updP, updA) = f' b'
+           in (tweakAdjAtPoint la updP rp, const updA <$> la)
       )
 
 -- | Re-use the param for every possible element of a left-adjoint.
 
 -- $adjoinNote
 
-adjoinCheaply :: (Eq (l ()), Adjunction l r) => Lear p a b -> Lear p (l a) b
+adjoinCheaply :: (Eq (l ()), Adjunction l r) => Lear a b -> Lear (l a) b
 adjoinCheaply (Lear f) = Lear $ \p la ->
   let (b, f') = zapWithAdjunction f (tabulate $ const p) la
    in ( b,
         \b' ->
-          let (updP, Endo updA) = f' b'
-           in (updP, Endo (updA <$>))
+          let (updP, updA) = f' b'
+           in (updP, fmap (const updA) la)
       )
 
 -- This Eq constraint is so ugly, and the whole function seems pretty
 -- inefficient.
-tweakAdjAtPoint :: (Eq (f ()), Adjunction f u) => f a -> Endo b -> Endo (u b)
-tweakAdjAtPoint point (Endo f) = Endo $ \cont -> tabulateAdjunction $ \ix ->
+tweakAdjAtPoint :: (Eq (f ()), Adjunction f u) => f a -> b -> u b -> u b
+tweakAdjAtPoint point f r = tabulateAdjunction $ \ix ->
   if void point == ix
-    then f $ indexAdjunction cont ix
-    else indexAdjunction cont ix
+    then f
+    else indexAdjunction r ix
 
 con ::
   (Traversable f) =>
@@ -80,8 +80,8 @@ instance (Traversable (Base t), Corecursive t) => Corecursive (E x t) where
 cataL ::
   forall p t a.
   (Applicative (Base t), Corecursive t, Recursive t, Traversable (Base t)) =>
-  Lear p (Base t a) a ->
-  Lear p t a
+  Lear (Base t a) a ->
+  Lear t a
 cataL (Lear f) = Lear $ \p t ->
   let once :: (a, a -> (p -> p, Base t a))
       once = cata (\x -> f p (fst <$> x)) t
@@ -92,7 +92,7 @@ cataL (Lear f) = Lear $ \p t ->
 anaL ::
   forall p t a.
   (Applicative (Base t), Corecursive t, Recursive t, Traversable (Base t)) =>
-  Lear p a (Base t a) ->
-  Lear p a t
+  Lear a (Base t a) ->
+  Lear a t
 anaL (Lear f) = Lear $ \p t -> _
 -}
