@@ -14,14 +14,14 @@ import Lear.Internal.Type
 
 -- $adjoinNote
 -- `adjoin` and `adjoinCheaply` can be seen as two extremes options for how to
--- lift a `Lear` to work on a left-adjoint input. `adjoin` uses the upper bound
+-- lift a `Lear c` to work on a left-adjoint input. `adjoin` uses the upper bound
 -- for the param, whereas `adjoinCheaply` uses the lower bound.
 
 -- | Lift param and input through an adjunction.
 
 -- $adjoinNote
 
-adjoin :: (Eq (l ()), Adjunction l r) => Lear a b -> Lear (r p) (l a) b
+adjoin :: (Eq (l ()), forall p. c p => c (r p), Adjunction l r) => Lear c a b -> Lear c (l a) b
 adjoin (Lear f) = Lear $ \rp la ->
   let (b, f') = zapWithAdjunction f rp la
    in ( b,
@@ -34,7 +34,7 @@ adjoin (Lear f) = Lear $ \rp la ->
 
 -- $adjoinNote
 
-adjoinCheaply :: (Eq (l ()), Adjunction l r) => Lear a b -> Lear (l a) b
+adjoinCheaply :: (Eq (l ()), Adjunction l r) => Lear c a b -> Lear c (l a) b
 adjoinCheaply (Lear f) = Lear $ \p la ->
   let (b, f') = zapWithAdjunction f (tabulate $ const p) la
    in ( b,
@@ -80,9 +80,9 @@ instance (Traversable (Base t), Corecursive t) => Corecursive (E x t) where
 cataL ::
   forall p t a.
   (Applicative (Base t), Corecursive t, Recursive t, Traversable (Base t)) =>
-  Lear (Base t a) a ->
-  Lear t a
-cataL (Lear f) = Lear $ \p t ->
+  Lear c (Base t a) a ->
+  Lear c t a
+cataL (Lear c f) = Lear c $ \p t ->
   let once :: (a, a -> (p -> p, Base t a))
       once = cata (\x -> f p (fst <$> x)) t
       co :: (a -> (x -> x, Base t a)) -> a -> (x -> x, t)
@@ -92,7 +92,7 @@ cataL (Lear f) = Lear $ \p t ->
 anaL ::
   forall p t a.
   (Applicative (Base t), Corecursive t, Recursive t, Traversable (Base t)) =>
-  Lear a (Base t a) ->
-  Lear a t
-anaL (Lear f) = Lear $ \p t -> _
+  Lear c a (Base t a) ->
+  Lear c a t
+anaL (Lear c f) = Lear c $ \p t -> _
 -}

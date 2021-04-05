@@ -1,22 +1,37 @@
 module Lear.Internal.Combinators where
 
 import Data.Bifunctor
+import Data.Dynamic
 import Data.Monoid
 import Data.VectorSpace
   ( VectorSpace (..),
     lerp,
   )
 import Lear.Internal.Type
+import System.Random
 
+newtype Param = Param {getParam :: Dynamic}
+
+newParamFor :: Lear' a b -> IO Param
+newParamFor (Lear l) = do
+  let p = fst (snd (l undefined undefined) undefined)
+  p' <- randomIO
+  pure . Param . toDyn $ (p' `asType` p)
+
+asType :: a -> a -> a
+asType a b = a
+
+learnOne :: Lear' a b -> a -> b -> Param -> Maybe Param
+learnOne (Lear f) a b (Param p) = case fromDynamic p of
+  Just p' -> Just $ Param . toDyn . fst $ snd (f p' a) b
+  Nothing -> Nothing
+{-
 backprop :: Lear a b -> p -> a -> (b, b -> (p, a))
 backprop (Lear f) = f
 
-runLear :: Lear a b -> p -> a -> b
-runLear l p a = fst (backprop l p a)
 
 learnOne :: Lear a b -> p -> a -> b -> (p, a)
 learnOne l p a = snd (backprop l p a)
-
 (<?) :: Lear a b -> b -> (p, a) -> p
 (<?) l b (p, a) = fst $ learnOne l p a b
 
@@ -48,4 +63,5 @@ withError ::
   Lear a a
 withError errFn = Lear $ \_ a ->
   (a, \a' -> let s = errFn a a' in ((s *^), lerp a a' s))
+-}
 -}

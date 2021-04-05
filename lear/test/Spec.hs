@@ -5,7 +5,6 @@ import Control.Lens.TH
 import Data.Bifunctor
 import Data.Coerce
 import Data.Functor.Foldable
-import Data.Group
 import Data.Monoid (Sum (..))
 import Data.VectorSpace ()
 import GHC.Generics (Generic)
@@ -75,13 +74,13 @@ learnOneSpec =
 -- | A linear function passing through the origin without noise.
 --
 -- This is solvable from one datapoint, which makes testing easier.
-linear :: Lear Linear Float Float
+linear :: Lear c Float Float
 linear = #weight . param * input
 
-linear' :: Lear Linear Float Float
+linear' :: Lear c Float Float
 linear' = #weight . param * input + #bias . param
 
-linearSub :: Lear Linear Float Float
+linearSub :: Lear c Float Float
 linearSub = #weight . param - input
 
 {-

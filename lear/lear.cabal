@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 87effd5039688ec7f2ea579c431a5fd9287bf507d744617f585ac785ab13c694
+-- hash: abb095bd39fd82dee24cb6da9beed0da1e12a98a40c7aa05a456e04701567c7e
 
 name:           lear
 version:        0.1.0.0
@@ -50,6 +50,7 @@ library
     , lens
     , mtl
     , one-liner
+    , random
     , recursion-schemes
     , vector-space
   default-language: Haskell2010
@@ -82,6 +83,7 @@ test-suite lear-test
     , mtl
     , one-liner
     , one-liner-instances
+    , random
     , recursion-schemes
     , vector-space
   default-language: Haskell2010

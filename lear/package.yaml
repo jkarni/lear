@@ -19,6 +19,7 @@ dependencies:
 - distributive
 - one-liner
 - recursion-schemes
+- random
 - vector-space
 - ghc-prim
 - lens

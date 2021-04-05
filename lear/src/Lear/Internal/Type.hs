@@ -1,4 +1,5 @@
 {-# LANGUAGE UndecidableInstances #-}
+{-# LANGUAGE UndecidableSuperClasses #-}
 
 module Lear.Internal.Type where
 
@@ -11,7 +12,9 @@ import Data.Functor.Rep
 import Data.Group
 import qualified Data.Map as Map
 import Data.Monoid
+import Data.Proxy
 import Data.Tuple (swap)
+import Data.Typeable (Typeable)
 import Data.VectorSpace
   ( AdditiveGroup (..),
     VectorSpace (..),
@@ -20,10 +23,17 @@ import Debug.Trace
 import GHC.Exts (Constraint)
 import GHC.Generics (Generic)
 import Generics.OneLiner
+import System.Random
 import Prelude hiding ((.), id)
 
 data Lear (c :: * -> Constraint) a b where
   Lear :: (c p) => (p -> a -> (b, b -> (p, a))) -> Lear c a b
+
+class (f x, g x) => And f g x
+
+instance (f x, g x) => And f g x
+
+type Lear' = Lear (Typeable `And` Random)
 
 firstL :: (c (), forall pl pr. (c pl, c pr) => c (pl, pr)) => Lear c a b -> Lear c (a, d) (b, d)
 firstL l = l <***> id

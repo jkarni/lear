@@ -11,17 +11,17 @@ import GHC.OverloadedLabels
 import GHC.Types
 import Lear.Internal.Type
 
-liftLens' :: Lens' (p, a) b -> Lear a b
+liftLens' :: c p => Lens' (p, a) b -> Lear c a b
 liftLens' l = Lear $ \p a -> ((p, a) ^. l, \b' -> (p, a) & l .~ b')
 
-liftLens :: Lens' a b -> Lear a b
-liftLens l = liftLens' (_2 . l)
+liftLens :: forall c a b. c () => Lens' a b -> Lear c a b
+liftLens l = liftLens' (_2 . l :: Lens' ((), a) b)
 
 -- | A lifted version of `the`.
-look :: forall (sel :: Symbol) a b p. HasField sel a a b b => Lear a b
+look :: forall (sel :: Symbol) a b c. (c (), HasField sel a a b b) => Lear c a b
 look = liftLens (field @sel)
 
-instance HasField name a a b b => IsLabel name (Lear a b) where
+instance (c (), HasField name a a b b) => IsLabel name (Lear c a b) where
   fromLabel = liftLens (field @name)
 {-
 
