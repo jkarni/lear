@@ -1,7 +1,13 @@
-module Main where
+{-# LANGUAGE UndecidableInstances #-}
+
+module Main
+  ( main,
+  )
+where
 
 import Control.Category
 import Control.Lens.TH
+import Control.Monad.IO.Class (liftIO)
 import Data.Bifunctor
 import Data.Coerce
 import Data.Functor.Foldable
@@ -15,9 +21,10 @@ import qualified Hedgehog.Range as HR
 import Lear
 import Numeric.Backprop
 import Numeric.OneLiner
+import System.Random
 import Test.Hspec
 import Test.Hspec.Hedgehog
-import Prelude hiding ((.))
+import Prelude hiding ((.), id)
 
 data Linear
   = Linear
@@ -39,11 +46,11 @@ runLearSpec :: Spec
 runLearSpec =
   describe "runLear" $ do
     it "should be the original function" $ do
-      let l = Linear {weight = 5, bias = 7}
-      runLear linear l 3 `shouldBe` 15
+      l <- newParamFor linear
+      runLear linear l 3 `shouldBe` Just 15
     it "work for lens composition" $ do
-      let l = Linear {weight = 5, bias = 7}
-      runLear linear' l 3 `shouldBe` 22
+      l <- newParamFor linear'
+      runLear linear' l 3 `shouldBe` Just 22
 
 learnOneSpec :: Spec
 learnOneSpec =
@@ -53,35 +60,47 @@ learnOneSpec =
   where
     -- context "linearSub" $ testLear linearSub
 
+    testLear :: Lear NeedC Float Float -> Spec
     testLear lear = do
       it "returns the input if correct" $ hedgehog $ do
-        (w, b, x) <- (,,) <$> floatGen <*> floatGen <*> floatGen
-        let l = Linear {weight = w, bias = b}
-        learnOne lear l x (runLear lear l x) ~=~ (l, x)
+        (b, x) <- (,) <$> floatGen <*> floatGen
+        l <- liftIO $ newParamFor lear
+        case runLear lear l x of
+          Nothing -> liftIO $ expectationFailure "Should be Just"
+          Just y -> learnOne lear x y l ~=~ Just (l, x)
       it "returns the fixed param if incorrect" $ hedgehog $ do
-        (w, b, x, y) <- (,,,) <$> floatGen <*> floatGen <*> floatGen <*> floatGen
-        let l = Linear {weight = w, bias = b}
-        let (l', _) = learnOne lear l x y
-        runLear lear l' x ~=~ y
+        (b, x, y) <- (,,) <$> floatGen <*> floatGen <*> floatGen
+        l <- liftIO $ newParamFor lear
+        let Just (l', _) = learnOne lear x y l
+        runLear lear l' x ~=~ Just y
       it "returns the fixed input if incorrect" $ hedgehog $ do
-        (w, b, x, y) <- (,,,) <$> floatGen <*> floatGen <*> floatGen <*> floatGen
-        let l = Linear {weight = w, bias = b}
-        let (_, x') = learnOne lear l x y
-        runLear lear l x' ~=~ y
+        (b, x, y) <- (,,) <$> floatGen <*> floatGen <*> floatGen
+        l <- liftIO $ newParamFor lear
+        let Just (_, x') = learnOne lear x y l
+        liftIO . print $ ("orig", runLear lear l x)
+        liftIO . print $ ("new", runLear lear l x')
+        liftIO . print $ ("goal", Just y)
+        runLear lear l x' ~=~ Just y
 
 -- * Helpers
+
+type NeedC = Typeable `And` Show `And` Random `And` ApproximateEq
+
+class (a ~ b) => Is a b
+
+instance (a ~ b) => Is a b
 
 -- | A linear function passing through the origin without noise.
 --
 -- This is solvable from one datapoint, which makes testing easier.
-linear :: Lear c Float Float
-linear = #weight . param * input
+linear :: Lear NeedC Float Float
+linear = param * id
 
-linear' :: Lear c Float Float
-linear' = #weight . param * input + #bias . param
+linear' :: Lear NeedC Float Float
+linear' = param * id + param
 
-linearSub :: Lear c Float Float
-linearSub = #weight . param - input
+linearSub :: Lear NeedC Float Float
+linearSub = param - id
 
 {-
 foldLinear :: Lear Linear [Float] (Float)
@@ -114,3 +133,23 @@ instance (ApproximateEq a, ApproximateEq b) => ApproximateEq (a, b) where
 
 instance ApproximateEq Linear where
   Linear a0 a1 ~~ Linear b0 b1 = a0 ~~ b0 && a1 ~~ b1
+
+instance ApproximateEq () where
+  _ ~~ _ = True
+
+instance (c `Implies` ApproximateEq) => ApproximateEq (Param c) where
+  Param t1 v1 ~~ Param t2 v2 =
+    case t1 `eqTypeRep` t2 of
+      Nothing -> False
+      Just HRefl -> v1 ~~ v2
+
+instance ApproximateEq a => ApproximateEq (Maybe a) where
+  Just x ~~ Just y = x ~~ y
+  Nothing ~~ Nothing = True
+  _ ~~ _ = False
+
+instance Random Linear where
+  random g =
+    let (a, g') = random g
+        (b, g'') = random g'
+     in (Linear a b, g'')

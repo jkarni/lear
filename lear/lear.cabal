@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: abb095bd39fd82dee24cb6da9beed0da1e12a98a40c7aa05a456e04701567c7e
+-- hash: 1a25baa70fbf12432d8f676752a4502e78b945df9b5c17b7f5d73b5cdefac346
 
 name:           lear
 version:        0.1.0.0
@@ -31,6 +31,7 @@ library
       Lear.Internal.Adjoint
       Lear.Internal.Combinators
       Lear.Internal.Lens
+      Lear.Internal.Orphans
       Lear.Internal.Spans
       Lear.Internal.Type
   other-modules:

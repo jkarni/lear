@@ -1,3 +1,5 @@
+{-# LANGUAGE UndecidableInstances #-}
+
 module Lear.Internal.Combinators where
 
 import Data.Bifunctor
@@ -7,23 +9,65 @@ import Data.VectorSpace
   ( VectorSpace (..),
     lerp,
   )
+import GHC.Show (showList__)
 import Lear.Internal.Type
 import System.Random
+import Type.Reflection ((:~~:) (HRefl), TypeRep, eqTypeRep, typeRep)
 
-newtype Param = Param {getParam :: Dynamic}
+data Param c where
+  Param :: c a => TypeRep a -> a -> Param c
 
-newParamFor :: Lear' a b -> IO Param
+instance (c `Implies` Show) => Show (Param c) where
+  show (Param t a) = show a
+  showsPrec i (Param t a) = showsPrec i a
+  showList = error "TODO"
+
+-- showList = showList__ (showsPrec 0)
+
+class (forall x. c1 x => c2 x) => Implies c1 c2
+
+instance (forall x. c1 x => c2 x) => Implies c1 c2
+
+toParam :: (c a, Typeable a) => a -> Param c
+toParam = Param typeRep
+
+fromParam :: forall a c. Typeable a => Param c -> Maybe a
+fromParam (Param t p)
+  | Just HRefl <- t `eqTypeRep` t' = Just p
+  | otherwise = Nothing
+  where
+    t' = typeRep :: TypeRep a
+
+newParamFor :: (c `Implies` Random, c `Implies` Typeable) => Lear c a b -> IO (Param c)
 newParamFor (Lear l) = do
   let p = fst (snd (l undefined undefined) undefined)
   p' <- randomIO
-  pure . Param . toDyn $ (p' `asType` p)
+  pure . toParam $ (p' `asType` p)
 
 asType :: a -> a -> a
 asType a b = a
 
-learnOne :: Lear' a b -> a -> b -> Param -> Maybe Param
-learnOne (Lear f) a b (Param p) = case fromDynamic p of
-  Just p' -> Just $ Param . toDyn . fst $ snd (f p' a) b
+-- | Not quite batch, since there are more ps. Need to combine them.
+batch :: (forall p. c p => c (f p), Applicative f) => Lear c a b -> Lear c (f a) (f b)
+batch (Lear f) = Lear $ \fp fa ->
+  let (fb, ffb) = pull $ f <$> fp <*> fa
+      pull x = (fst <$> x, snd <$> x)
+   in (fb, \fbs -> pull $ ffb <*> fbs)
+
+learnOne ::
+  (c `Implies` Typeable) =>
+  Lear c a b ->
+  a ->
+  b ->
+  Param c ->
+  Maybe (Param c, a)
+learnOne (Lear f) a b p = case fromParam p of
+  Just p' -> Just $ first toParam $ snd (f p' a) b
+  Nothing -> Nothing
+
+runLear :: (c `Implies` Typeable) => Lear c a b -> Param c -> a -> Maybe b
+runLear (Lear f) p a = case fromParam p of
+  Just p' -> Just $ fst $ f p' a
   Nothing -> Nothing
 {-
 backprop :: Lear a b -> p -> a -> (b, b -> (p, a))

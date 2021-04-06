@@ -33,7 +33,7 @@ class (f x, g x) => And f g x
 
 instance (f x, g x) => And f g x
 
-type Lear' = Lear (Typeable `And` Random)
+-- type Lear' = Lear (Typeable `And` Random `And` Show)
 
 firstL :: (c (), forall pl pr. (c pl, c pr) => c (pl, pr)) => Lear c a b -> Lear c (a, d) (b, d)
 firstL l = l <***> id

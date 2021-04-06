@@ -23,6 +23,9 @@ look = liftLens (field @sel)
 
 instance (c (), HasField name a a b b) => IsLabel name (Lear c a b) where
   fromLabel = liftLens (field @name)
+
+param :: (c p) => Lear c a p
+param = liftLens' _1
 {-
 
 
