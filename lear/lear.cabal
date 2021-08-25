@@ -1,10 +1,10 @@
 cabal-version: 1.12
 
--- This file has been generated from package.yaml by hpack version 0.34.2.
+-- This file has been generated from package.yaml by hpack version 0.34.4.
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 1a25baa70fbf12432d8f676752a4502e78b945df9b5c17b7f5d73b5cdefac346
+-- hash: 9f988b38d7da30cf1627cc4c115262ff76596ef3bde7382241b852632284b1f7
 
 name:           lear
 version:        0.1.0.0
@@ -38,10 +38,36 @@ library
       Paths_lear
   hs-source-dirs:
       src
-  default-extensions: ConstraintKinds DataKinds DefaultSignatures DeriveFunctor DeriveGeneric DeriveTraversable DerivingVia ExistentialQuantification FlexibleContexts FlexibleInstances FunctionalDependencies GADTs MultiParamTypeClasses OverloadedLabels PolyKinds QuantifiedConstraints RankNTypes ScopedTypeVariables StandaloneDeriving TupleSections TypeApplications TypeFamilies TypeOperators
+  default-extensions:
+      ConstraintKinds
+      DataKinds
+      DefaultSignatures
+      DeriveFunctor
+      DeriveGeneric
+      DeriveTraversable
+      DerivingVia
+      ExistentialQuantification
+      FlexibleContexts
+      FlexibleInstances
+      FunctionalDependencies
+      GADTs
+      MultiParamTypeClasses
+      OverloadedLabels
+      PolyKinds
+      QuantifiedConstraints
+      RankNTypes
+      ScopedTypeVariables
+      StandaloneDeriving
+      TupleSections
+      TypeApplications
+      TypeFamilies
+      TypeOperators
   build-depends:
       adjunctions
     , base >=4.7 && <5
+    , concat-classes
+    , concat-examples
+    , concat-plugin
     , containers
     , distributive
     , generic-lens
@@ -49,6 +75,7 @@ library
     , ghc-typelits-natnormalise
     , groups
     , lens
+    , ms
     , mtl
     , one-liner
     , random
@@ -63,13 +90,39 @@ test-suite lear-test
       Paths_lear
   hs-source-dirs:
       test
-  default-extensions: ConstraintKinds DataKinds DefaultSignatures DeriveFunctor DeriveGeneric DeriveTraversable DerivingVia ExistentialQuantification FlexibleContexts FlexibleInstances FunctionalDependencies GADTs MultiParamTypeClasses OverloadedLabels PolyKinds QuantifiedConstraints RankNTypes ScopedTypeVariables StandaloneDeriving TupleSections TypeApplications TypeFamilies TypeOperators
+  default-extensions:
+      ConstraintKinds
+      DataKinds
+      DefaultSignatures
+      DeriveFunctor
+      DeriveGeneric
+      DeriveTraversable
+      DerivingVia
+      ExistentialQuantification
+      FlexibleContexts
+      FlexibleInstances
+      FunctionalDependencies
+      GADTs
+      MultiParamTypeClasses
+      OverloadedLabels
+      PolyKinds
+      QuantifiedConstraints
+      RankNTypes
+      ScopedTypeVariables
+      StandaloneDeriving
+      TupleSections
+      TypeApplications
+      TypeFamilies
+      TypeOperators
   ghc-options: -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       QuickCheck
     , adjunctions
     , backprop
     , base >=4.7 && <5
+    , concat-classes
+    , concat-examples
+    , concat-plugin
     , containers
     , distributive
     , generic-lens
@@ -81,6 +134,7 @@ test-suite lear-test
     , hspec-hedgehog
     , lear
     , lens
+    , ms
     , mtl
     , one-liner
     , one-liner-instances

@@ -15,18 +15,22 @@ description:         Please see the README on GitHub at <https://github.com/gith
 dependencies:
 - base >= 4.7 && < 5
 - adjunctions
+- concat-classes
+- concat-plugin
+- concat-examples
 - containers
 - distributive
-- one-liner
-- recursion-schemes
-- random
-- vector-space
+- generic-lens
 - ghc-prim
+- ms
+- ghc-typelits-natnormalise
+- groups
 - lens
 - mtl
-- ghc-typelits-natnormalise
-- generic-lens
-- groups
+- one-liner
+- random
+- recursion-schemes
+- vector-space
 
 library:
   source-dirs: src

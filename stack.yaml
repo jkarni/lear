@@ -6,4 +6,15 @@ packages:
 nix:
     enable: true
 
-extra-deps: []
+allow-newer: true
+extra-deps:
+- ms-0.2.1@sha256:9f94b57fd49fb06f3b01c11ff38c67844c6172acc3f65c6ab431a99e9741a1cb,2378
+- git: https://github.com/conal/concat.git
+  commit: f114b4622abccac759b07c6dc5480eec1fd25602
+  subdirs:
+  - classes
+  - plugin
+  - known
+  - inline
+  - satisfy
+  - examples

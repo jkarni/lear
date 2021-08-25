@@ -1,4 +1,8 @@
 {-# LANGUAGE UndecidableInstances #-}
+{-# OPTIONS_GHC -fplugin-opt=ConCat.Plugin:showResiduals #-}
+
+{-# OPTIONS_GHC -fplugin=ConCat.Plugin #-}
+{-# OPTIONS_GHC -fplugin-opt=ConCat.Plugin:showCcc #-}
 
 module Main
   ( main,
@@ -10,6 +14,9 @@ import Control.Lens.TH
 import Control.Monad.IO.Class (liftIO)
 import Data.Bifunctor
 import Data.Coerce
+import ConCat.Rebox ()
+import GHC.Generics
+import ConCat.AltCat ()
 import Data.Functor.Foldable
 import Data.Monoid (Sum (..))
 import Data.VectorSpace ()
@@ -24,8 +31,16 @@ import Numeric.OneLiner
 import System.Random
 import Test.Hspec
 import Test.Hspec.Hedgehog
+import Control.Monad
 import Prelude hiding ((.), id)
 
+main :: IO ()
+main = do
+  let inputs = (\x -> (x, 1 + x * 3)) <$> [1..100]
+  xs <- learnMany t' inputs
+  forM_ (zip inputs xs) $ \((_, expected), (p, (_, actual))) ->
+    putStrLn $ "p: " ++ show p ++ " Diff: " ++ show (expected - actual)
+{-
 data Linear
   = Linear
       { weight :: Float,
@@ -153,3 +168,4 @@ instance Random Linear where
     let (a, g') = random g
         (b, g'') = random g'
      in (Linear a b, g'')
+-}

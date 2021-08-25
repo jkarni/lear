@@ -1,10 +1,17 @@
 {-# LANGUAGE UndecidableInstances #-}
+{-# OPTIONS_GHC -fplugin-opt=ConCat.Plugin:showResiduals #-}
+
+{-# OPTIONS_GHC -fplugin=ConCat.Plugin #-}
+{-# OPTIONS_GHC -fplugin-opt=ConCat.Plugin:showCcc #-}
+
 
 module Lear.Internal.Combinators where
 
 import Data.Bifunctor
+import Data.Proxy
 import Data.Dynamic
 import Data.Monoid
+import Data.Traversable
 import Data.VectorSpace
   ( VectorSpace (..),
     lerp,
@@ -24,9 +31,6 @@ instance (c `Implies` Show) => Show (Param c) where
 
 -- showList = showList__ (showsPrec 0)
 
-class (forall x. c1 x => c2 x) => Implies c1 c2
-
-instance (forall x. c1 x => c2 x) => Implies c1 c2
 
 toParam :: (c a, Typeable a) => a -> Param c
 toParam = Param typeRep
@@ -34,11 +38,12 @@ toParam = Param typeRep
 fromParam :: forall a c. Typeable a => Param c -> Maybe a
 fromParam (Param t p)
   | Just HRefl <- t `eqTypeRep` t' = Just p
-  | otherwise = Nothing
+  | otherwise = error $ "I have type: " ++ show t ++ " but you want: " ++ show (typeRep :: TypeRep a)
   where
     t' = typeRep :: TypeRep a
 
-newParamFor :: (c `Implies` Random, c `Implies` Typeable) => Lear c a b -> IO (Param c)
+
+newParamFor :: Lear P a b -> IO (Param P)
 newParamFor (Lear l) = do
   let p = fst (snd (l undefined undefined) undefined)
   p' <- randomIO
@@ -69,6 +74,39 @@ runLear :: (c `Implies` Typeable) => Lear c a b -> Param c -> a -> Maybe b
 runLear (Lear f) p a = case fromParam p of
   Just p' -> Just $ fst $ f p' a
   Nothing -> Nothing
+
+runLear' :: (c `Implies` Random, c `Implies` Typeable) =>
+    Lear c a b -> a -> IO (Param c, b)
+runLear' (Lear f) a = do
+  p <- randomIO
+  return (toParam p, fst $ f p a)
+
+{-# INLINE runLear'' #-}
+runLear'' :: Lear P a () -> a -> IO (Param P, a)
+runLear'' (Lear f) a = do
+  p <- randomIO
+  let (b', back') = f p a
+      (p', a') = back' ()
+  return (toParam p', a')
+
+learnMany :: Lear P a () -> [a] -> IO [(Param P, a)]
+learnMany (Lear f) as = do
+  p <- randomIO
+  let go xp xa =
+        let (b', back') = f xp xa
+            (p', a') = back' ()
+         in (p', (p', a'))
+  return $ fmap (first toParam) $ snd $ mapAccumL go p as
+
+
+back :: (c `Implies` Random, c `Implies` Typeable) =>
+    Lear c a b -> a -> b -> IO (Param c, a)
+back (Lear f) a b = do
+  p <- randomIO
+  let (b', back') = f p a
+      (p', a') = back' b
+  return (toParam p', a')
+
 {-
 backprop :: Lear a b -> p -> a -> (b, b -> (p, a))
 backprop (Lear f) = f
