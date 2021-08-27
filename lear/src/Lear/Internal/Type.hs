@@ -11,6 +11,7 @@ module Lear.Internal.Type where
 
 import Math.MetricSpace
 import Control.Applicative
+import Control.Monad
 import ConCat.AdditiveFun
 import Control.Arrow
 import Data.Functor.Contravariant (Op(..))
@@ -41,11 +42,18 @@ import System.Random
 import Prelude hiding ((.), id)
 
 data Lear (c :: * -> Constraint) a b where
-  Lear :: (c p) => (p -> a -> (b, b -> (p, a))) -> Lear c a b
+  Lear :: (c p) => { getLear :: (p -> a -> (b, b -> (p, a))) } -> Lear c a b
 
 class (f x, g x) => And f g x
 
 instance (f x, g x) => And f g x
+
+der :: forall a b . (a -> b) -> (a -> (b, b -> a))
+der fn =
+  let fnWithoutP = unD (toCcc' fn :: GD (Dual (-+>)) a b)
+   in \a -> let (b, Dual (AddFun bFn)) = fnWithoutP a
+                in (b, bFn)
+
 
 {-# INLINE deriv #-}
 deriv :: forall a b c. c () => (a -> b) -> Lear c a b
@@ -176,7 +184,7 @@ instance (c (), forall pl pr. (c pl, c pr) => c (pl, pr)) => Arrow (Lear c) wher
 class Nil x
 instance Nil x
 
-type P = Typeable `And` Random `And` Show `And` Num
+type P = Typeable `And` Random `And` Show `And` Num `And` Fractional
 
 instance Random () where
   randomR _ g = ((), g)
@@ -192,11 +200,11 @@ instance (Random pl, Random pr) => Random (pl, pr) where
 
 -- Testing
 
-{-# INLINE loss #-}
-loss :: (b -> b -> l) -> Lear P a b -> Lear P (a, b) l
-loss d l = proc (a, bExpected) -> do
+{-# INLINE loss'' #-}
+loss'' :: (b -> b -> l) -> Lear P a b -> Lear P (a, b) l
+loss'' d l = proc (a, bExpected) -> do
   bActual <- l -< a
-  err <- arr (uncurry d) -< (bExpected, bActual)
+  err <- arr (uncurry d) -< (bActual, bExpected)
   returnA -< err
 
 -- shouldn't be act, but metric?
@@ -205,8 +213,8 @@ loss' m (Lear f) = Lear $ \p (a, b) ->
   let (b', lf) = f p a
    in (m b b', \l' ->
         -- TODO: check whether this is b' or b
-        let (p', a') = lf (b - b')
-         in (p - p', (a', b - b')) )
+        let (p', a') = lf b
+         in (p', (a', b)) )
 
 class Act dx x | x -> dx, dx -> x where
   act :: dx -> x -> x
@@ -219,6 +227,14 @@ instance Act Int Int where
 instance Act Double Double where
   act = (+)
   subtrAct = (-)
+
+data Net a b = Net
+  { model :: Lear P a b
+  , loss :: b -> b -> Loss
+  }
+
+type Loss = Double
+
 
 {-# INLINE learningRate #-}
 learningRate :: Num l => l -> Lear P l ()
@@ -241,10 +257,15 @@ tuck (Lear l) = Lear $ \(p, p') a ->
                    in ((px, px'), a'))
 
 t :: Lear P Double Double
-t = tuck $ arr $ \(p, x) -> 1 + p * x
+t = tuck $ arr $ \(p, x) -> p + (3 * x)
 
 t' :: Lear P (Double, Double) ()
-t' = gradientDescent $ learningRate 0.0 . loss (\a b -> (a - b) ^ 2) t
+t' = gradientDescent $ learningRate 0.0 . loss'' (\a b -> (a - b) ^ 2) t
+
+t'' :: Lear P (Double, Double) Double
+t'' = loss' (\a b -> (a - b) ^ 2) t
+-- t'' = loss'' (\_ _ -> 7) t
+
 
 {-
 -}
@@ -266,3 +287,18 @@ instance (Num a , Num b ) => Num (a, b) where
   abs (a, b) = (abs a, abs b)
   negate (a, b) = (negate a, negate b)
 
+instance Fractional () where
+  fromRational _ = ()
+  recip _ = ()
+
+instance (Fractional a, Fractional b) => Fractional (a, b)  where
+  fromRational x = (fromRational x, fromRational x)
+  recip (a, b) = (recip a, recip b)
+
+foo :: IO ()
+foo = do
+  let d = der (\x -> 1 + (x * 3))
+  forM_ [1..10] $ \x -> do
+    let (b, back) = d x
+    putStrLn $ "b: " ++ show b ++ " back-1: " ++ show (back 1)
+    putStrLn $ "b: " ++ show b ++ " back-1: " ++ show (back 2)

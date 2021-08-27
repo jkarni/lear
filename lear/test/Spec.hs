@@ -36,10 +36,17 @@ import Prelude hiding ((.), id)
 
 main :: IO ()
 main = do
-  let inputs = (\x -> (x, 1 + x * 3)) <$> [1..100]
-  xs <- learnMany t' inputs
-  forM_ (zip inputs xs) $ \((_, expected), (p, (_, actual))) ->
-    putStrLn $ "p: " ++ show p ++ " Diff: " ++ show (expected - actual)
+  let inputs = (\x -> (x, x * 3)) <$> [0,0.01..1]
+  foo
+  xs <- learnMany' t'' inputs
+  forM_ (zip inputs xs) $ \((a, b), (p, pred, loss)) ->
+    putStrLn $
+       "p: " ++ show p ++
+       "\na: " ++ show a ++
+       "\nb: " ++ show b ++
+       "\npred: " ++ show pred ++
+       "\nloss: " ++ show loss ++
+       "\n\n"
 {-
 data Linear
   = Linear

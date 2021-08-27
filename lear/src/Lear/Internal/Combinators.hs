@@ -81,6 +81,7 @@ runLear' (Lear f) a = do
   p <- randomIO
   return (toParam p, fst $ f p a)
 
+
 {-# INLINE runLear'' #-}
 runLear'' :: Lear P a () -> a -> IO (Param P, a)
 runLear'' (Lear f) a = do
@@ -98,6 +99,26 @@ learnMany (Lear f) as = do
          in (p', (p', a'))
   return $ fmap (first toParam) $ snd $ mapAccumL go p as
 
+learnMany' :: Lear P a Double -> [a] -> IO [(Param P, a, Double)]
+learnMany' (Lear f) as = do
+  p <- randomIO
+  let go xp inp =
+        let (loss, back') = f xp inp
+            (p', a') = back' (- loss)
+            newP = xp - (0.01 * p')
+         in (newP, (newP, a', loss))
+  return $ fmap (\(a, b, c) -> (toParam a, b, c)) $ snd $ mapAccumL go p as
+
+learMany :: Net a b -> [(a, b)] -> IO [(Param P, Loss)]
+learMany Net { model = Lear f , loss = diff  } inputs = do
+  p <- randomIO
+  let -- go :: p -> (a, b) -> (p, (p, Loss))
+      go xp (xa, xb) =
+        let (b', back') = f xp xa
+            (p', a') = back' xb
+            newP = xp - (0.1 * p')
+         in (newP, (newP, diff xb b'))
+  return $ fmap (first toParam) $ snd $ mapAccumL go p inputs
 
 back :: (c `Implies` Random, c `Implies` Typeable) =>
     Lear c a b -> a -> b -> IO (Param c, a)

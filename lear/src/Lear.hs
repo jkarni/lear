@@ -8,8 +8,9 @@ where
 import Data.Function ((&))
 import Data.Typeable (Typeable)
 import Lear.Internal.Adjoint as X
+import Lear.Internal.Mon as X (newParam, Mon(..))
 import Lear.Internal.Combinators as X
-import Lear.Internal.Lens as X
+-- import Lear.Internal.Lens as X
 import Lear.Internal.Orphans as X
 import Lear.Internal.Spans as X
 import Lear.Internal.Type as X
